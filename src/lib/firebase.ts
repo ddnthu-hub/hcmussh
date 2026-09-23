@@ -857,6 +857,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         const data = prediction.data();
         return String(data.scoreType || '').toLowerCase() === 'real'
           && data.isReal === true
+          && data.source === 'user_prediction'
           && typeof data.userId === 'string'
           && data.userId.trim().length > 0;
       }).length;

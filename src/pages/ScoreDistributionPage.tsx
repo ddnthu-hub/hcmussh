@@ -506,7 +506,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
 
               {/* Footer Note */}
               <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500">
-                Hệ thống chỉ lưu điểm xét tuyển dự kiến ẩn danh, không lưu bất kỳ thông tin nhận diện cá nhân nào.
+                Dữ liệu điểm được dùng cho thống kê cộng đồng và không hiển thị thông tin cá nhân của người dùng.
               </div>
             </div>
 

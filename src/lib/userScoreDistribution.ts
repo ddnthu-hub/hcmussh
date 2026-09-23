@@ -185,6 +185,7 @@ export async function saveUserScoreDistribution(params: {
       userAdmissionScore: roundedScore,
       scoreType: 'real',
       isReal: true,
+      source: 'user_prediction',
       year,
       majorCode: majorCode || '',
       majorName: majorName || '',
@@ -254,9 +255,9 @@ export async function getUserScoreDistribution(
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const score = Number(data.userAdmissionScore ?? data.score);
-      const isRealScore = data.scoreType
-        ? String(data.scoreType).toLowerCase() === 'real'
-        : data.isReal !== false;
+      const isRealScore = String(data.scoreType || '').toLowerCase() === 'real'
+        && data.isReal === true
+        && data.source === 'user_prediction';
 
       if (
         typeof score === 'number' &&
@@ -265,7 +266,7 @@ export async function getUserScoreDistribution(
         score <= 100 &&
         isRealScore &&
         typeof data.userId === 'string' &&
-        data.userId.length > 0
+        data.userId.trim().length > 0
       ) {
         records.push({
           id: docSnap.id,
@@ -373,6 +374,9 @@ export async function createManagedUserScoreDistribution(
     programType: String(data.programType || '').trim(),
     combination: String(data.combination || '').trim(),
     approved: false,
+    scoreType: 'fake',
+    isReal: false,
+    source: 'admin_manual',
     createdAt: serverTimestamp(),
   });
 }
