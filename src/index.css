@@ -1,0 +1,397 @@
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Segoe UI';
+  --font-display: 'Segoe UI';
+
+  --ussh-blue: #123b69;
+  --ussh-blue-dark: #0b2a4a;
+  --ussh-blue-light: #2f5f8f;
+  --ussh-blue-subtle: #e8f1f8;
+  --ussh-red: #8f1d2c;
+  --ussh-red-dark: #6f1420;
+  --ussh-red-light: #f8e8eb;
+  --ussh-yellow: #f5b700;
+  --ussh-yellow-light: #fff6d6;
+
+  --ussh-bg: #ffffff;
+  --ussh-card: #ffffff;
+  --ussh-border: #d4e4ef;
+
+  --primary: var(--ussh-blue);
+  --primary-hover: var(--ussh-blue-dark);
+  --primary-active: var(--ussh-blue-dark);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--ussh-blue-light);
+  --secondary-hover: var(--ussh-blue);
+  --secondary-light: var(--ussh-blue-subtle);
+  --secondary-border: #b9d9ea;
+  --secondary-foreground: #ffffff;
+
+  --accent: var(--ussh-red);
+  --accent-hover: var(--ussh-red-dark);
+  --accent-active: var(--ussh-red-dark);
+  --accent-foreground: #ffffff;
+  --accent-light: var(--ussh-red-light);
+  --accent-border: #edb8be;
+
+  --background: var(--ussh-bg);
+  --card: var(--ussh-card);
+  --card-foreground: #0f172a;
+
+  --foreground: #173b70;
+  --heading: var(--ussh-blue-dark);
+  --muted: #f2f8fb;
+  --muted-foreground: #49657d;
+  --subtle: #7890a3;
+
+  --border: var(--ussh-border);
+  --border-strong: #9fc7dc;
+
+  --success: #1f9d61;
+  --success-light: #eafaf1;
+  --success-foreground: #0f5132;
+  --success-border: #b7e4c7;
+
+  --warning: var(--ussh-yellow);
+  --warning-light: var(--ussh-yellow-light);
+  --warning-foreground: #6b4d00;
+  --warning-border: #f0d477;
+
+  --error: var(--ussh-red);
+  --error-light: var(--ussh-red-light);
+  --error-foreground: var(--ussh-red-dark);
+  --error-border: #efc2c2;
+
+  --info: var(--ussh-blue);
+  --info-light: var(--ussh-blue-subtle);
+  --info-foreground: var(--ussh-blue-dark);
+  --info-border: #b9d9ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  max-width: 100vw;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img, svg, canvas, video {
+  max-width: 100%;
+  display: block;
+}
+
+a, button, input, select, textarea, .btn, .input, .badge, .card, .modal, .table {
+  font-family: var(--font-sans);
+}
+
+body *, body *::before, body *::after {
+  font-family: inherit;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+/* Compact academic navigation inspired by the official USSH masthead. */
+.ussh-nav-link {
+  border-radius: 0.25rem;
+  font-family: 'Segoe UI';
+  font-size: 0.8125rem;
+  letter-spacing: 0.015em;
+  line-height: 1.25;
+  transition: transform 180ms ease, color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.ussh-nav-link:hover:not(.is-active) {
+  color: var(--ussh-blue-dark);
+  background-color: var(--ussh-blue-subtle);
+  box-shadow: 0 4px 10px rgba(11, 42, 91, 0.12);
+  transform: translateY(-2px);
+}
+
+.ussh-nav-link.is-active {
+  box-shadow: 0 3px 8px rgba(11, 42, 91, 0.14);
+}
+
+@media (max-width: 1023px) {
+  .ussh-nav-link {
+    font-size: 0.875rem;
+  }
+}
+
+/* ==========================================================================
+   USSH REUSABLE UTILITY CLASSES FOR CONSISTENCY ACROSS ALL PAGES
+   ========================================================================== */
+
+/* Standard Responsive Laptop & Desktop Container */
+.container-academic {
+  width: 100%;
+  max-width: 1360px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-academic {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-academic {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Standard Buttons */
+button, .btn {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary, button[type="submit"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(15, 43, 92, 0.15);
+}
+.btn-primary:hover, button[type="submit"]:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  box-shadow: 0 2px 4px 0 rgba(15, 43, 92, 0.25);
+}
+.btn-primary:active, button[type="submit"]:active:not(:disabled) {
+  background-color: var(--primary-active);
+}
+.btn-primary:disabled, button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+}
+
+.btn-action-highlight {
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--muted);
+  border-color: var(--border-strong);
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 700 !important;
+  transition: all 0.2s ease-in-out;
+}
+.btn-accent:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+/* Cards & Surfaces */
+.card-academic {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.card-academic:hover {
+  border-color: var(--border-strong);
+}
+
+/* Headings */
+.heading-academic {
+  color: var(--heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Badges */
+.badge-academic-primary {
+  background-color: #f0f4fa;
+  color: var(--primary);
+  border: 1px solid #cbd7eb;
+}
+
+.badge-academic-accent {
+  background-color: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.badge-academic-success {
+  background-color: var(--success-light);
+  color: var(--success-foreground);
+  border: 1px solid var(--success-border);
+}
+
+.badge-academic-warning {
+  background-color: var(--warning-light);
+  color: var(--warning-foreground);
+  border: 1px solid var(--warning-border);
+}
+
+.badge-academic-info {
+  background-color: var(--info-light);
+  color: var(--info-foreground);
+  border: 1px solid var(--info-border);
+}
+
+/* Custom Academic Tables */
+.table-academic th {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-academic td {
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #1e293b;
+  padding: 0.75rem 0.875rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 1024px) {
+  .table-academic th {
+    font-size: 0.875rem;
+    padding: 0.875rem 1rem;
+  }
+  .table-academic td {
+    font-size: 0.9375rem;
+    padding: 0.875rem 1rem;
+  }
+}
+
+.table-academic tr:hover td {
+  background-color: rgba(240, 244, 250, 0.65);
+}
+
+/* Academic Inputs and Selects */
+.input-academic {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  padding: 0.625rem 0.875rem;
+  min-height: 2.625rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.input-academic:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(15, 43, 92, 0.15);
+}
+
+/* ==========================================================================
+   PRINT MEDIA STYLES (@media print)
+   Optimized for A4 printing of score lists without navigation, footers, or UI controls
+   ========================================================================== */
+@media print {
+  .score-print-table {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  header,
+  nav,
+  footer,
+  #navbar,
+  #footer,
+  .no-print,
+  #back-to-top-btn,
+  #firestore-live-status-bar,
+  #reload-firestore-top-btn {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 12mm 10mm;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    font-weight: 700 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

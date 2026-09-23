@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "admission_scores": {
+      "title": "Admission Score",
+      "description": "Historical and 2026 admission cutoff scores for USSH VNU-HCM majors across admission forms and combinations",
+      "type": "object",
+      "properties": {
+        "nam": { "type": "number", "description": "Admission year (e.g. 2023, 2024, 2025, 2026)" },
+        "ma_nganh": { "type": "string", "description": "Major code (e.g. 7140101, 7320101)" },
+        "ten_nganh": { "type": "string", "description": "Major name" },
+        "he_dao_tao": { "type": "string", "description": "Program type (Chuẩn, CLC, Liên kết)" },
+        "ma_pt": { "type": "string", "description": "Admission method code (THPT, DGNL, HSG_DOITUYEN, UTXT_DHQG, UTXT_PT, UTXT_TSGN)" },
+        "doi_tuong": { "type": "string", "description": "Admission form (ĐT01, ĐT02, ĐT03) or target category" },
+        "to_hop": { "type": "string", "description": "Subject combination (e.g. D01, C00, A01)" },
+        "diem_chuan": { "type": "number", "description": "Cutoff benchmark score" },
+        "chi_tieu_du_kien": { "type": "number", "description": "Target quota" },
+        "ghi_chu": { "type": "string", "description": "Additional notes" },
+        "mon_chinh": { "type": "string", "description": "Primary coefficient subject if applicable" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last updated timestamp" }
+      },
+      "required": ["nam", "ma_nganh", "ten_nganh", "he_dao_tao", "diem_chuan"]
+    },
+    "user_score_distribution": {
+      "title": "User Score Distribution",
+      "description": "Anonymous expected admission scores entered by users via admission forecast for aggregate community distribution",
+      "type": "object",
+      "properties": {
+        "userAdmissionScore": { "type": "number", "description": "Candidate expected admission score on 100-point scale" },
+        "year": { "type": "number", "description": "Admission year (2026)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userAdmissionScore", "year"]
+    }
+  }
+}

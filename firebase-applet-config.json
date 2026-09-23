@@ -1,0 +1,12 @@
+{
+  "projectId": "usshwebsite",
+  "appId": "1:190026465141:web:1d377a643b7699b1ffdd3c",
+  "apiKey": "AIzaSyAneNAhmY1hjML_lDAZhEVUGocy7_ke7Xk",
+  "authDomain": "usshwebsite.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "usshwebsite.firebasestorage.app",
+  "messagingSenderId": "190026465141",
+  "measurementId": "",
+  "oAuthClientId": "190026465141-7m1gueejil4llsi8bk58ggdh5k2ksue3.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
+}

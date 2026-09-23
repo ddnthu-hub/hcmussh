@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // admission_scores: Public read access for applicants, students, and counselors
+    match /admission_scores/{scoreId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // User score distribution for candidate aggregate analytics
+    match /user_score_distribution/{docId} {
+      allow read: if resource.data.approved == true;
+      allow create: if request.resource.data.userAdmissionScore is number
+                    && request.resource.data.userAdmissionScore >= 0
+                    && request.resource.data.userAdmissionScore <= 100
+                    && request.resource.data.year is number
+                    && request.resource.data.approved == false;
+      allow update, delete: if request.auth != null;
+    }
+
+    match /user_messages/{messageId} {
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'unanswered';
+      allow read: if request.auth != null
+                  && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if request.auth != null
+                    && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if request.auth != null
+            && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Admin accounts are authenticated with Firebase email/password. Custom
+    // admin claims remain supported for deployments that configure them.
+    function isAdmin() {
+      return request.auth.token.admin == true
+        || request.auth.token.email in [
+          'vovanthu25122000@gmail.com',
+          'tuyensinh.ussh@vnuhcm.edu.vn',
+          'truyenthong.ussh@vnuhcm.edu.vn'
+        ];
+    }
+
+    // Optional prediction logs and analytics
+    match /prediction_logs/{logId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /page_views/{viewId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+    }
+
+    // Catalog items
+    match /catalogs/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /catalog_items/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Admin members and audit logs
+    match /admins/{memberId} {
+      allow read, write: if request.auth != null;
+    }
+    match /admin_members/{memberId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /audit_logs/{logId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
