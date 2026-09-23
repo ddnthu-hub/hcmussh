@@ -5,7 +5,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { auth, findAdminMemberByEmail, getAdminMembers, createAuditLog } from '../../lib/firebase';
+import { activateAdminMember, auth, findAdminMemberByEmail, getAdminMembers, createAuditLog } from '../../lib/firebase';
 import { AdminMemberDoc, AdminRole } from '../../types';
 
 interface AdminAuthContextType {
@@ -75,6 +75,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedMember));
               } else if (member && member.status === 'inactive') {
                 setError('Tài khoản quản trị viên này đã bị vô hiệu hóa.');
+                setAdminUser(null);
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+              } else if (member && member.status === 'pending') {
+                setError('Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.');
                 setAdminUser(null);
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
               } else {
@@ -159,9 +163,36 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return { success: false, error: errText };
       }
 
+      if (member.status === 'pending') {
+        try {
+          await activateAdminMember();
+        } catch {
+          const errText = 'Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.';
+          setError(errText);
+          setLoading(false);
+          return { success: false, error: errText };
+        }
+        const activatedMember = await findAdminMemberByEmail(normalizedEmail);
+        if (!activatedMember || activatedMember.status !== 'active') {
+          const errText = 'Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.';
+          setError(errText);
+          setLoading(false);
+          return { success: false, error: errText };
+        }
+      }
+
       // Success
-      const normalizedRole = normalizeAdminRole(member.role);
-      const normalizedMember = { ...member, role: normalizedRole };
+      const resolvedMember = member.status === 'pending'
+        ? await findAdminMemberByEmail(normalizedEmail)
+        : member;
+      if (!resolvedMember) {
+        const errText = 'Không thể tải thông tin quyền quản trị.';
+        setError(errText);
+        setLoading(false);
+        return { success: false, error: errText };
+      }
+      const normalizedRole = normalizeAdminRole(resolvedMember.role);
+      const normalizedMember = { ...resolvedMember, role: normalizedRole };
       setAdminUser(normalizedMember);
       setRole(normalizedRole);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedMember));

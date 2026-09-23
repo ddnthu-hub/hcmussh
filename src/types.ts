@@ -246,7 +246,7 @@ export interface AdminMemberDoc {
   email: string;
   name: string;
   role: AdminRole;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'pending';
   created_at: string;
   last_login?: string;
 }

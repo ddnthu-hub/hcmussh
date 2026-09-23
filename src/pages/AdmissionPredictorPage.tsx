@@ -831,7 +831,7 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
           try {
             await saveUserScoreDistribution({
               userAdmissionScore,
-              year,
+              year: 2026,
               uniqueKey: analysisSignature,
               majorCode: result.input.majorCode,
               majorName: result.input.majorName,

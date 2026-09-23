@@ -10,11 +10,10 @@ import {
   AlertCircle, 
   CheckCircle2, 
   UserCheck, 
-  Sparkles 
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const { login, quickLogin, error, clearError, loading } = useAdminAuth();
+  const { login, error, loading } = useAdminAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -25,19 +24,6 @@ export const AdminLoginPage: React.FC = () => {
 
     setSubmitting(true);
     const res = await login(email, password);
-    setSubmitting(false);
-
-    if (res.success) {
-      navigateTo('/admin/dashboard');
-    }
-  };
-
-  const handleQuickLogin = async (targetEmail: string) => {
-    clearError();
-    setEmail(targetEmail);
-    setPassword('USSH@2026');
-    setSubmitting(true);
-    const res = await quickLogin(targetEmail);
     setSubmitting(false);
 
     if (res.success) {
@@ -147,71 +133,6 @@ export const AdminLoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Quick Testing Login section for convenience & immediate evaluation */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Tài khoản mẫu thử nghiệm quyền
-            </span>
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          </div>
-
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('vovanthu25122000@gmail.com')}
-              className="w-full text-left p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 transition-all flex items-center justify-between cursor-pointer"
-            >
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-purple-950 truncate">
-                  vovanthu25122000@gmail.com
-                </div>
-                <div className="text-[10px] text-purple-700">
-                  Võ Văn Thư • Toàn quyền quản trị cao nhất
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-purple-200 text-purple-900 shrink-0 ml-2">
-                Superadmin
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('tuyensinh.ussh@vnuhcm.edu.vn')}
-              className="w-full text-left p-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 transition-all flex items-center justify-between cursor-pointer"
-            >
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-blue-950 truncate">
-                  tuyensinh.ussh@vnuhcm.edu.vn
-                </div>
-                <div className="text-[10px] text-blue-700">
-                  Phòng Tuyển sinh • Nhập liệu & Quản lý điểm
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-blue-200 text-blue-900 shrink-0 ml-2">
-                Admin
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('truyenthong.ussh@vnuhcm.edu.vn')}
-              className="w-full text-left p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition-all flex items-center justify-between cursor-pointer"
-            >
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-emerald-950 truncate">
-                  truyenthong.ussh@vnuhcm.edu.vn
-                </div>
-                <div className="text-[10px] text-emerald-700">
-                  Bộ phận Tư vấn • Xem dữ liệu & Kiểm tra
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-200 text-emerald-900 shrink-0 ml-2">
-                Editor
-              </span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Footer copyright */}

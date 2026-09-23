@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAdminMembers, saveAdminMember, deleteAdminMember } from '../lib/firebase';
+import { getAdminMembers, inviteAdminMember, saveAdminMember, deleteAdminMember } from '../lib/firebase';
 import { AdminMemberDoc, AdminRole } from '../types';
 import { 
   Users, 
@@ -77,12 +77,20 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
     }
 
     try {
-      await saveAdminMember(editingMember, currentAdminEmail);
+      if (!editingMember.id) {
+        await inviteAdminMember({
+          email: editingMember.email.trim().toLowerCase(),
+          name: editingMember.name.trim(),
+          role: editingMember.role === 'admin' ? 'admin' : 'editor',
+        });
+      } else {
+        await saveAdminMember(editingMember, currentAdminEmail);
+      }
       setEditingMember(null);
       await loadMembers();
     } catch (err) {
       console.error('Error saving member:', err);
-      alert('Lỗi khi lưu tài khoản cán bộ.');
+      alert(err instanceof Error ? err.message : 'Không thể gửi lời mời cán bộ.');
     }
   };
 
@@ -143,11 +151,11 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
           </button>
           {isSuperadmin && (
             <button
-              onClick={() => setEditingMember({ email: '', name: '', role: 'editor', status: 'active' })}
+              onClick={() => setEditingMember({ email: '', name: '', role: 'editor', status: 'pending' })}
               className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[var(--ussh-blue)] hover:bg-[var(--ussh-blue-dark)] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>Thêm cán bộ mới</span>
+              <span>Mời cán bộ mới</span>
             </button>
           )}
         </div>
@@ -213,9 +221,13 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   <td className="py-3.5 px-4 text-center">{getRoleBadge(String(member.role).toLowerCase().replace(/[-\s]+/g, '_') === 'super_admin' ? 'superadmin' : member.role)}</td>
                   <td className="py-3.5 px-4 text-center">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      member.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                      member.status === 'active'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
                     }`}>
-                      {member.status === 'active' ? 'Đang hoạt động' : 'Tạm dừng'}
+                      {member.status === 'active'
+                        ? 'Đang hoạt động'
+                        : 'Chưa kích hoạt tài khoản'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-slate-500 text-[11px]">
@@ -260,7 +272,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 text-xs space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">
-                {editingMember.id ? 'Cập nhật thông tin cán bộ' : 'Thêm cán bộ quản trị mới'}
+                {editingMember.id ? 'Cập nhật thông tin cán bộ' : 'Mời cán bộ quản trị'}
               </h3>
               <button onClick={() => setEditingMember(null)} className="text-slate-400">
                 <X className="w-4 h-4" />
@@ -275,7 +287,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   value={editingMember.email || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
                   className="w-full p-2.5 rounded-lg border border-slate-300 font-mono"
-                  placeholder="canbo@hcmussh.edu.vn"
+                  placeholder="Nhập email người được mời"
                   required
                 />
               </div>
@@ -294,7 +306,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Vai trò (Role) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Vai trò được mời *</label>
                   <select
                     value={editingMember.role || 'editor'}
                     onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value as AdminRole })}
@@ -303,18 +315,6 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   >
                     <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Trạng thái</label>
-                  <select
-                    value={editingMember.status || 'active'}
-                    onChange={(e) => setEditingMember({ ...editingMember, status: e.target.value as 'active' | 'inactive' })}
-                    className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
-                    disabled={isProtectedSuperadmin(editingMember)}
-                  >
-                    <option value="active">Đang hoạt động</option>
-                    <option value="inactive">Tạm dừng</option>
                   </select>
                 </div>
               </div>
@@ -331,7 +331,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-[var(--ussh-blue)] text-white font-bold"
                 >
-                  Lưu
+                  Mời
                 </button>
               </div>
             </form>

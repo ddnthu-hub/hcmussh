@@ -17,6 +17,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { getAuth, Auth, signInAnonymously } from 'firebase/auth';
+import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
 import { 
   AdmissionScoreDoc, 
   AuditLogDoc, 
@@ -49,6 +50,7 @@ export const isFirebaseConfigured = Boolean(
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
+let functionsClient: Functions | null = null;
 
 if (isFirebaseConfigured) {
   try {
@@ -57,12 +59,25 @@ if (isFirebaseConfigured) {
     const databaseId = firebaseAppletConfig.firestoreDatabaseId || '(default)';
     db = getFirestore(app, databaseId);
     auth = getAuth(app);
+    functionsClient = getFunctions(app);
   } catch (err) {
     console.warn('Firebase initialization notice:', err);
   }
 }
 
 export { auth };
+
+export async function inviteAdminMember(params: { email: string; name: string; role: 'admin' | 'editor' }): Promise<void> {
+  if (!functionsClient) throw new Error('Firebase Cloud Functions chưa được cấu hình.');
+  const callable = httpsCallable<typeof params, { success: boolean; status: string }>(functionsClient, 'inviteAdminMember');
+  await callable(params);
+}
+
+export async function activateAdminMember(): Promise<void> {
+  if (!functionsClient) throw new Error('Firebase Cloud Functions chưa được cấu hình.');
+  const callable = httpsCallable<undefined, { success: boolean }>(functionsClient, 'activateAdminMember');
+  await callable(undefined);
+}
 
 export async function ensurePublicUser(): Promise<{ uid: string; email: string }> {
   if (!auth) throw new Error('Firebase Auth chưa được cấu hình.');
@@ -674,7 +689,7 @@ export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAd
     email: String(member.email || '').trim().toLowerCase(),
     name: String(member.name || 'Cán bộ quản trị'),
     role: (normalizedRole === 'super_admin' ? (member.role as AdminRole) : normalizedRole) as AdminRole,
-    status: member.status || 'active',
+    status: member.status || 'pending',
     created_at: member.created_at || new Date().toISOString(),
     last_login: member.last_login || new Date().toISOString(),
   };

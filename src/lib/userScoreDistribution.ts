@@ -239,6 +239,7 @@ export async function getUserScoreDistribution(
   }
 
   try {
+    await ensurePublicUser();
     const collRef = collection(db, USER_DISTRIBUTION_COLLECTION);
     const q = query(collRef, where('year', '==', year));
     const snapshot = await getDocs(q);
@@ -291,7 +292,7 @@ export async function getUserScoreDistribution(
     return records;
   } catch (err) {
     console.error('[UserScoreDistribution] Lỗi truy vấn Firestore:', err);
-    return cachedUserScores || [];
+    throw err;
   }
 }
 

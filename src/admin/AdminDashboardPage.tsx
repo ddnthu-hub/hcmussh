@@ -6,6 +6,7 @@ import {
   getAuditLogs 
 } from '../lib/firebase';
 import { AdmissionScoreDoc, AuditLogDoc, NavigationTab } from '../types';
+import { normalizeOrientationMajorCode } from '../data/orientationData';
 import { 
   FileSpreadsheet, 
   School, 
@@ -51,7 +52,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
       ]);
       const latestYear = Math.max(...allScores.map((score) => score.nam), 2026);
       const latestYearMajorCount = new Set(
-        allScores.filter((score) => score.nam === latestYear).map((score) => score.ma_nganh)
+        allScores
+          .filter((score) => score.nam === latestYear && score.ma_nganh)
+          .map((score) => normalizeOrientationMajorCode(String(score.ma_nganh).trim()))
       ).size;
       setStats({ ...dashStats, totalMajors: latestYearMajorCount });
       setRecentScores(allScores.slice(0, 5));
@@ -135,7 +138,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
               {loading ? '...' : (stats?.totalMajors ?? 'Chưa có dữ liệu')}
             </div>
             <span className="text-[11px] text-slate-400 font-medium mt-0.5 block">
-              Mã ngành năm 2026
+              Dữ liệu năm 2026
             </span>
           </div>
           <div className="w-11 h-11 rounded-xl bg-[#f8e9ec] text-[#8f1d2c] flex items-center justify-center shrink-0">

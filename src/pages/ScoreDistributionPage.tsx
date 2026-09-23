@@ -386,6 +386,19 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
           <p className="text-sm font-bold text-slate-700">Đang tổng hợp dữ liệu phân bố điểm người dùng từ hệ thống...</p>
           <p className="text-xs text-slate-500 mt-1">Vui lòng chờ trong giây lát.</p>
         </div>
+      ) : fetchError ? (
+        <div className="bg-white rounded-2xl border border-rose-200 p-8 sm:p-12 text-center shadow-xs space-y-4">
+          <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto text-rose-500">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900">Không thể tải dữ liệu phân bố điểm.</h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{fetchError}</p>
+          </div>
+          <button type="button" onClick={() => fetchScoresData(true)} className="inline-flex items-center gap-2 rounded-xl bg-[var(--ussh-blue-dark)] px-4 py-2.5 text-xs font-bold text-white">
+            <RotateCcw className="w-4 h-4" /> Thử lại
+          </button>
+        </div>
       ) : !hasEnoughDistributionUsers ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs space-y-4">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">

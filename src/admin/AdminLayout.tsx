@@ -149,7 +149,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 else handleNavClick('home');
               }}
               className="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#edf5ff] hover:bg-[#dfeeff] text-[#0b2a4a] font-semibold transition-colors cursor-pointer"
-              title="Về website người dùng công khai"
+              title="Về website dành cho thí sinh"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Về cổng hệ thống</span>
