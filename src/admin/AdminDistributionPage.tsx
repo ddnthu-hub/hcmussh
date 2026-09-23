@@ -111,7 +111,7 @@ export const AdminDistributionPage: React.FC<AdminDistributionPageProps> = ({ cu
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#8f1d2c]"><Filter className="h-4 w-4" /> Collection: user_score_distribution</div>
-          <h1 className="mt-1 text-xl font-bold text-[#0b2a4a]">Quản trị dữ liệu phân bố điểm</h1>
+          <h1 className="mt-1 text-xl font-bold text-[#0b2a4a]">QUẢN TRỊ DỮ LIỆU PHÂN BỐ ĐIỂM</h1>
           <p className="mt-1 text-xs text-slate-500">Dữ liệu riêng cho biểu đồ phân bố, không phải admission_scores và không ảnh hưởng điểm chuẩn.</p>
         </div>
         <div className="flex gap-2">

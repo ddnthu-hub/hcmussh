@@ -492,7 +492,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTab }) => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--ussh-blue-dark)] tracking-tight">
-              Cẩm nang tuyển sinh
+              Cẩm nang của hệ thống
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
               Tổng hợp cẩm nang và hướng dẫn sử dụng giúp thí sinh nắm rõ quy trình xét tuyển

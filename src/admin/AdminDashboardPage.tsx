@@ -88,7 +88,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
             <span>Trung tâm chỉ huy & Điều hành tuyển sinh</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Tổng Quan Hệ Thống Dữ Liệu USSH
+            TỔNG QUAN HỆ THỐNG DỮ LIỆU USSH
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Dữ liệu tổng hợp từ các bộ sưu tập Firestore tuyển sinh
@@ -135,7 +135,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
               Mã ngành năm 2026
             </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-[#f8e9ec] text-[#8f1d2c] flex items-center justify-center shrink-0">
             <School className="w-5 h-5" />
           </div>
         </div>
@@ -151,7 +151,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
               {stats?.yearsList.join(', ') || 'Chưa có năm'}
             </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center shrink-0">
             <Calendar className="w-5 h-5" />
           </div>
         </div>
@@ -167,7 +167,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
               Phân quyền 3 cấp
             </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-[#f8e9ec] text-[#8f1d2c] flex items-center justify-center shrink-0">
             <Users className="w-5 h-5" />
           </div>
         </div>
@@ -176,43 +176,43 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
       {/* Secondary Metrics Row (Lượt dự đoán & Lượt truy cập) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Số lượt dự đoán */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-2xl border border-[#c9d8e8] shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Lượt dự đoán đã ghi nhận</span>
-            <div className="text-xl font-bold text-slate-900 mt-1">
+            <div className="text-xl font-bold text-[var(--ussh-blue-dark)] mt-1">
               {loading ? '...' : (stats?.totalPredictions > 0 ? stats.totalPredictions.toLocaleString() : '0 (Chưa có dữ liệu)')}
             </div>
-            <span className="text-[10px] text-slate-400">collection: prediction_logs</span>
+            <span className="text-[10px] text-[#8f1d2c] font-medium">Dữ liệu dự đoán thực tế đã lưu</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center">
             <TrendingUp className="w-4 h-4" />
           </div>
         </div>
 
         {/* Access totals are intentionally not presented as a business metric. */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-2xl border border-[#e7c6cd] shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Dữ liệu lượt truy cập</span>
             <div className="text-xl font-bold text-[#8f1d2c] mt-1">
-              Không sử dụng
+              {loading ? '...' : (stats?.totalPageViews > 0 ? stats.totalPageViews.toLocaleString() : 'Chưa có dữ liệu')}
             </div>
-            <span className="text-[10px] text-slate-400">Không hiển thị số liệu tổng hợp</span>
+            <span className="text-[10px] text-[#8f1d2c] font-medium">Lượt truy cập được ghi nhận</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-rose-50 text-[#8f1d2c] flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-[#f8e9ec] text-[#8f1d2c] flex items-center justify-center">
             <Eye className="w-4 h-4" />
           </div>
         </div>
 
         {/* Cập nhật gần nhất */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-2xl border border-[#c9d8e8] shadow-xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Lần đồng bộ gần nhất</span>
             <div className="text-xl font-bold text-[var(--ussh-blue-dark)] mt-1">
               {loading ? '...' : stats?.lastUpdatedText}
             </div>
-            <span className="text-[10px] text-slate-400">Đã xác thực dữ liệu</span>
+            <span className="text-[10px] text-[var(--ussh-blue-dark)] font-medium">Đã xác thực dữ liệu · Xem điểm chuẩn</span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center">
             <Clock className="w-4 h-4" />
           </div>
         </div>
@@ -242,16 +242,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
           <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
         </div>
 
-        <div 
-          onClick={() => onSelectTab('admin-catalogs')}
-          className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
-        >
-          <div className="space-y-1">
-            <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">Cấu hình danh mục</h3>
-            <p className="text-xs text-slate-500">Quản lý tổ hợp môn, hệ đào tạo và phương thức</p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-        </div>
       </div>
 
       {/* Two Column Section: Recent Admission Scores & Recent Audit Logs */}

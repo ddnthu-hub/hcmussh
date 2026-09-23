@@ -6,12 +6,12 @@ import {
 } from '../lib/firebase';
 import { AdmissionScoreDoc, AdminRole } from '../types';
 import { Pagination } from '../components/Pagination';
+import { formatMethod2023_2025, formatTrainingType, normalizeDoiTuong2026 } from '../pages/ScoreLookupPage';
 import { 
   Search, 
   Plus, 
   Edit3, 
   Trash2, 
-  Eye, 
   ChevronLeft, 
   ChevronRight, 
   Filter, 
@@ -44,7 +44,6 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
   // Modals state
   const [editingRecord, setEditingRecord] = useState<Partial<AdmissionScoreDoc> | null>(null);
   const [isNewRecord, setIsNewRecord] = useState(false);
-  const [viewingRecord, setViewingRecord] = useState<AdmissionScoreDoc | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -76,19 +75,22 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
         s.ma_nganh.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchYear = selectedYear === 'all' || s.nam.toString() === selectedYear;
-      const matchProgram = selectedProgram === 'all' || s.he_dao_tao === selectedProgram;
-      const matchMethod = selectedMethod === 'all' || s.ma_pt === selectedMethod || s.doi_tuong === selectedMethod;
-      const matchComb = selectedCombination === 'all' || s.to_hop === selectedCombination;
+      const program = formatTrainingType(s.he_dao_tao);
+      const method = s.nam === 2026 ? normalizeDoiTuong2026(s.doi_tuong) : formatMethod2023_2025(s.ma_pt);
+      const combination = s.to_hop && s.to_hop.trim().toUpperCase() !== 'ĐGNL' ? s.to_hop.trim() : '';
+      const matchProgram = selectedProgram === 'all' || program === selectedProgram;
+      const matchMethod = selectedMethod === 'all' || method === selectedMethod;
+      const matchComb = selectedCombination === 'all' || combination === selectedCombination;
 
       return matchSearch && matchYear && matchProgram && matchMethod && matchComb;
     });
   }, [scores, searchTerm, selectedYear, selectedProgram, selectedMethod, selectedCombination]);
 
   // Unique options for filters
-  const yearOptions = useMemo(() => Array.from(new Set(scores.map((s) => Number(s.nam)))).sort((a: number, b: number) => b - a), [scores]);
-  const programOptions = useMemo(() => Array.from(new Set(scores.map((s) => s.he_dao_tao))), [scores]);
-  const methodOptions = useMemo(() => Array.from(new Set(scores.flatMap((s) => [s.ma_pt, s.doi_tuong].filter(Boolean) as string[]))).sort(), [scores]);
-  const combinationOptions = useMemo(() => Array.from(new Set(scores.map((s) => s.to_hop))).sort(), [scores]);
+  const yearOptions = useMemo(() => [2026, 2025, 2024, 2023].filter((year) => scores.some((score) => Number(score.nam) === year)), [scores]);
+  const programOptions = useMemo(() => Array.from(new Set(scores.map((s) => formatTrainingType(s.he_dao_tao))).values()).sort(), [scores]);
+  const methodOptions = useMemo(() => Array.from(new Set(scores.map((s) => s.nam === 2026 ? normalizeDoiTuong2026(s.doi_tuong) : formatMethod2023_2025(s.ma_pt)))).sort(), [scores]);
+  const combinationOptions = useMemo(() => Array.from(new Set(scores.map((s) => s.to_hop?.trim()).filter((value): value is string => Boolean(value) && value.toUpperCase() !== 'ĐGNL'))).sort(), [scores]);
 
   // Pagination
   const totalPages = Math.ceil(filteredScores.length / rowsPerPage) || 1;
@@ -141,14 +143,14 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
   return (
     <div className="space-y-5">
       {/* Top Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="sticky top-16 z-30 self-start w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-md">
         <div>
           <div className="flex items-center space-x-2 text-xs text-slate-500 mb-1">
             <FileSpreadsheet className="w-4 h-4 text-blue-700" />
             <span>Firestore: admission_scores</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Quản Lý Điểm Chuẩn Tuyển Sinh
+            QUẢN LÝ ĐIỂM CHUẨN
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Xem, tìm kiếm, chỉnh sửa và cập nhật dữ liệu điểm chuẩn chính thức
@@ -213,6 +215,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
               onChange={(e) => { setSelectedYear(e.target.value); setCurrentPage(1); }}
               className="w-full py-2 px-2.5 rounded-lg border border-slate-200 text-slate-800 font-medium bg-white"
             >
+              <option value="all">Tất cả năm</option>
               {yearOptions.map((y) => (
                 <option key={y} value={y.toString()}>Năm {y}</option>
               ))}
@@ -236,13 +239,13 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
 
           {/* Lọc theo hình thức xét tuyển */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Mã phương thức</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Hình thức xét tuyển</label>
             <select
               value={selectedMethod}
               onChange={(e) => { setSelectedMethod(e.target.value); setCurrentPage(1); }}
               className="w-full py-2 px-2.5 rounded-lg border border-slate-200 text-slate-800 font-medium bg-white"
             >
-              <option value="all">Tất cả phương thức</option>
+              <option value="all">Tất cả hình thức</option>
               {methodOptions.map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
@@ -251,7 +254,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
 
           {/* Lọc theo tổ hợp */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tổ hợp môn</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tổ hợp xét tuyển</label>
             <select
               value={selectedCombination}
               onChange={(e) => { setSelectedCombination(e.target.value); setCurrentPage(1); }}
@@ -281,7 +284,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
             <thead>
               <tr className="bg-[#f4f7fb] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                 <th className="py-3 px-3.5 w-16">NĂM</th>
-                <th className="py-3 px-3.5 w-24">MÃ NGÀNH</th>
+                <th className="py-3 px-3.5 w-32 min-w-32 whitespace-nowrap">MÃ NGÀNH</th>
                 <th className="py-3 px-3.5">TÊN NGÀNH</th>
                 <th className="py-3 px-3.5">HỆ ĐÀO TẠO</th>
                 <th className="py-3 px-3.5 text-center">TỔ HỢP</th>
@@ -293,7 +296,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
               {currentRecords.map((item) => (
                 <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
                   <td className="py-3 px-3.5 text-slate-600 font-semibold">{item.nam}</td>
-                  <td className="py-3 px-3.5 font-mono text-slate-700">{item.ma_nganh}</td>
+                  <td className="py-3 px-3.5 w-32 min-w-32 whitespace-nowrap font-mono text-slate-700">{item.ma_nganh}</td>
                   <td className="py-3 px-3.5 font-bold text-slate-900">{item.ten_nganh}</td>
                   <td className="py-3 px-3.5 text-slate-600">
                     <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] border border-slate-200">
@@ -306,13 +309,6 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
                   </td>
                   <td className="py-3 px-3.5 text-center">
                     <div className="flex items-center justify-center space-x-1.5">
-                      <button
-                        onClick={() => setViewingRecord(item)}
-                        className="p-1 rounded text-slate-500 hover:text-blue-700 hover:bg-slate-100"
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
                       {canEdit && (
                         <button
                           onClick={() => {
@@ -455,9 +451,9 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
                     onChange={(e) => setEditingRecord({ ...editingRecord, thang_diem: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
                   >
-                    <option value={30}>30 điểm (THPT)</option>
+                    <option value={30}>30 điểm</option>
                     <option value={100}>100 điểm</option>
-                    <option value={1200}>1200 điểm (ĐGNL)</option>
+                    <option value={1200}>1200 điểm</option>
                   </select>
                 </div>
                 <div>
@@ -493,7 +489,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Ghi chú tuyển sinh</label>
+                <label className="block font-bold text-slate-700 mb-1">Ghi chú</label>
                 <textarea
                   rows={2}
                   value={editingRecord.ghi_chu || ''}
@@ -525,42 +521,6 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* View Detail Modal */}
-      {viewingRecord && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 text-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-[var(--ussh-blue-dark)]">Chi tiết bản ghi điểm chuẩn</h3>
-              <button onClick={() => setViewingRecord(null)} className="text-slate-400">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              <div><span className="text-slate-500">Mã ngành:</span> <strong className="font-mono">{viewingRecord.ma_nganh}</strong></div>
-              <div><span className="text-slate-500">Tên ngành:</span> <strong className="text-sm">{viewingRecord.ten_nganh}</strong></div>
-              <div><span className="text-slate-500">Năm tuyển sinh:</span> <strong>{viewingRecord.nam}</strong></div>
-              <div><span className="text-slate-500">Hệ đào tạo:</span> <strong>{viewingRecord.he_dao_tao}</strong></div>
-              <div><span className="text-slate-500">Tổ hợp môn:</span> <strong className="font-mono">{viewingRecord.to_hop}</strong></div>
-              <div><span className="text-slate-500">Điểm chuẩn:</span> <strong className="text-rose-600 font-bold text-base">{viewingRecord.diem_chuan}</strong> /{viewingRecord.thang_diem}</div>
-              <div><span className="text-slate-500">Chỉ tiêu dự kiến:</span> <strong>{viewingRecord.chi_tieu_du_kien || 'Theo đề án'}</strong></div>
-              <div><span className="text-slate-500">Mã phương thức:</span> <strong>{viewingRecord.ma_pt}</strong></div>
-              <div><span className="text-slate-500">Đối tượng:</span> <strong>{viewingRecord.doi_tuong || 'Toàn quốc'}</strong></div>
-              {viewingRecord.ghi_chu && (
-                <div><span className="text-slate-500">Ghi chú:</span> <p className="mt-0.5 text-slate-700 bg-slate-50 p-2 rounded">{viewingRecord.ghi_chu}</p></div>
-              )}
-            </div>
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
-              <button
-                onClick={() => setViewingRecord(null)}
-                className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
-              >
-                Đóng
-              </button>
-            </div>
           </div>
         </div>
       )}

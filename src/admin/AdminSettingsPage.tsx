@@ -47,7 +47,7 @@ export const AdminSettingsPage: React.FC = () => {
           <span>Hệ thống tuyển sinh & Cơ sở hạ tầng</span>
         </div>
         <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-          Cài Đặt & Cấu Hình Hệ Thống
+          CÀI ĐẶT & CẤU HÌNH HỆ THỐNG
         </h1>
         <p className="text-xs text-slate-500 mt-0.5">
           Trạng thái kết nối Firestore, thông tin dự án usshwebsite và tham số thuật toán tuyển sinh

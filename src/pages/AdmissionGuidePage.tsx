@@ -1,21 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { NavigationTab } from '../types';
-import { ADMISSION_METHODS, FAQ_ITEMS } from '../data/admissionData';
+import { ADMISSION_METHODS } from '../data/admissionData';
 import { getAdmissionScores, AdmissionScoreDoc } from '../lib/firebase';
 import { 
-  HelpCircle, 
   BookOpen, 
   FileText, 
   CheckCircle, 
-  ChevronDown, 
-  ChevronUp, 
   Calendar, 
   DollarSign, 
   Award, 
   Mail, 
   ExternalLink,
   Clock,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react';
 
 interface AdmissionGuidePageProps {
@@ -24,12 +22,7 @@ interface AdmissionGuidePageProps {
 
 export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelectTab }) => {
   const [activeMethodIndex, setActiveMethodIndex] = useState<number>(0);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [admissionRecords, setAdmissionRecords] = useState<AdmissionScoreDoc[]>([]);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
-  };
 
   const selectedMethod = ADMISSION_METHODS[activeMethodIndex];
 
@@ -46,13 +39,13 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
         if (record.nam === 2026) {
           const code = String(record.doi_tuong || record.ma_pt || '').toUpperCase();
           const label = code.includes('03')
-            ? 'DT03 – ĐGNL + Học bạ'
+            ? 'ĐT03 – ĐGNL + Học bạ'
             : code.includes('02')
-              ? 'DT02 – THPT + Học bạ'
+              ? 'ĐT02 – THPT + Học bạ'
               : code.includes('01')
-                ? 'DT01 – THPT + ĐGNL + Học bạ'
-                : record.ma_pt || record.doi_tuong || 'Chưa xác định mã phương thức';
-          yearMethods.add(label);
+                ? 'ĐT01 – THPT + ĐGNL + Học bạ'
+                : '';
+          if (label) yearMethods.add(label);
         } else {
           const methodLabels: Record<string, string> = {
             THPT: 'Thi tốt nghiệp THPT',
@@ -65,12 +58,25 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
             HSG_DOITUYEN: 'HSG Đội tuyển / Quốc gia',
           };
           const code = String(record.ma_pt || '').toUpperCase();
-          yearMethods.add(methodLabels[code] || record.ma_pt || 'Chưa xác định mã phương thức');
+          const label = methodLabels[code] || record.ma_pt || '';
+          if (label) yearMethods.add(label);
         }
         labels.set(record.nam, yearMethods);
       });
     return Array.from(labels.entries()).sort(([a], [b]) => b - a);
   }, [admissionRecords]);
+
+  const groupedHistoricalMethods = useMemo(() => {
+    const recent = historicalMethods.filter(([year]) => year === 2023 || year === 2024 || year === 2025);
+    const otherYears = historicalMethods.filter(([year]) => year !== 2023 && year !== 2024 && year !== 2025);
+    const methodSignature = (methods: Set<string>) => Array.from(methods).sort().join('|');
+
+    if (recent.length === 3 && recent.every(([, methods]) => methodSignature(methods) === methodSignature(recent[0][1]))) {
+      return [...otherYears, [2023, recent[0][1]] as [number, Set<string>]].sort(([a], [b]) => b - a).map(([year, methods]) => [year === 2023 ? '2023–2025' : year, methods] as [number | string, Set<string>]);
+    }
+
+    return historicalMethods;
+  }, [historicalMethods]);
 
   useEffect(() => {
     const sectionId = window.location.hash.slice(1);
@@ -87,10 +93,10 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
         <div>
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[var(--ussh-blue)]/10 text-[var(--ussh-blue-dark)] text-xs font-bold mb-2">
             <BookOpen className="w-3.5 h-3.5 text-[var(--ussh-blue-dark)]" />
-            <span>Cẩm nang tuyển sinh 2026 – 2027</span>
+            <span>Cẩm nang của hệ thống 2026</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Hướng dẫn tuyển sinh & Quy trình xét tuyển
+            Thông tin & Hướng dẫn
           </h1>
           <p className="text-sm text-slate-600 mt-1 max-w-2xl">
             Hướng dẫn cách sử dụng các chức năng tra cứu, dự đoán và định hướng; giải thích nguồn dữ liệu, công thức điểm và cách đọc kết quả trên website.
@@ -100,58 +106,85 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
       </div>
 
       <section id="guide-usage" className="scroll-mt-24 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+        <details className="group lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-slate-100 pb-3 text-[#0f2b5c] [&::-webkit-details-marker]:hidden">
+            <h2 className="text-lg sm:text-xl font-bold">Hướng dẫn sử dụng website</h2>
+            <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
           <div className="border-b border-slate-100 pb-3">
-            <h2 className="text-xl font-bold text-[#0f2b5c]">Hướng dẫn sử dụng website</h2>
             <p className="mt-1 text-xs text-slate-500">Chọn đúng chức năng theo nhu cầu của bạn.</p>
           </div>
-          <ol className="space-y-4 text-xs leading-relaxed text-slate-700">
-            <li><strong className="text-[#0f2b5c]">1. Tra cứu điểm chuẩn:</strong> chọn năm, phương thức, hệ đào tạo và tổ hợp; tìm theo mã hoặc tên ngành. Kết quả lấy từ dữ liệu điểm chuẩn đang có trong Firestore.</li>
-            <li><strong className="text-[#0f2b5c]">2. Dự đoán trúng tuyển:</strong> chọn ngành, phương thức và tổ hợp; chọn điểm thực tế hoặc giả định; nhập các đầu điểm được yêu cầu rồi bấm Phân tích. Mỗi ngành có điểm chuẩn và xác suất tham khảo riêng.</li>
-            <li><strong className="text-[#0f2b5c]">3. Định hướng ngành:</strong> đọc phần giới thiệu, bấm Bắt đầu khảo sát, trả lời 15 câu hỏi. Có thể bấm Dừng làm để lưu tiến độ và tiếp tục sau.</li>
-            <li><strong className="text-[#0f2b5c]">4. Phân bố điểm:</strong> sau khi hoàn thành dự đoán, xem vị trí điểm của mình trong dữ liệu phân bố người dùng và chọn các lần dự đoán trong danh sách lịch sử.</li>
+          <ol className="space-y-3 text-xs leading-relaxed text-slate-700">
+            <li className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <strong className="text-sm text-[#0f2b5c]">1. Tra cứu điểm chuẩn</strong>
+              <p className="mt-2">Chọn <strong>năm tuyển sinh, phương thức xét tuyển, hệ đào tạo và tổ hợp</strong>, sau đó lọc theo <strong>mã ngành hoặc tên ngành</strong>. Khi cần xem nhiều lựa chọn cùng lúc, dùng mục <strong>“Tất cả”</strong> nếu bộ lọc hỗ trợ.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Dữ liệu tra cứu là dữ liệu tuyển sinh đã có trong hệ thống.</li>
+                <li>Điểm chuẩn hiển thị không phải điểm dự đoán.</li>
+                <li>Mỗi phương thức, tổ hợp và hệ đào tạo có thể có mức điểm khác nhau.</li>
+              </ul>
+            </li>
+            <li className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <strong className="text-sm text-[#0f2b5c]">2. Dự đoán trúng tuyển</strong>
+              <p className="mt-2">Chọn <strong>ngành, phương thức xét tuyển và tổ hợp</strong>, rồi chọn loại điểm phù hợp:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li><strong>Điểm thực tế:</strong> điểm bạn đã có hoặc dự kiến sử dụng trong hồ sơ thực tế.</li>
+                <li><strong>Điểm giả định:</strong> điểm dùng để thử nghiệm các kịch bản khác nhau.</li>
+              </ul>
+              <p className="mt-2">Nhập các mức điểm được yêu cầu và nhấn <strong>Phân tích</strong>. Hệ thống quy đổi điểm, tính điểm xét tuyển, đối chiếu dữ liệu lịch sử phù hợp và đưa ra mức độ trúng tuyển <strong>ước tính</strong>. Nếu chọn nhiều ngành, từng ngành được phân tích riêng.</p>
+            </li>
+            <li className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <strong className="text-sm text-[#0f2b5c]">3. Định hướng ngành</strong>
+              <p className="mt-2">Trả lời các câu hỏi về <strong>sở thích, khả năng và nhóm năng lực</strong>. Hệ thống tổng hợp câu trả lời để xây dựng hồ sơ và tính <strong>mức độ phù hợp (%)</strong> với các ngành.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Xem các ngành có mức độ phù hợp cao.</li>
+                <li>Xem nhóm năng lực phù hợp và chi tiết theo từng ngành.</li>
+                <li>Mức độ phù hợp ngành không phải là xác suất trúng tuyển.</li>
+              </ul>
+            </li>
+            <li className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <strong className="text-sm text-[#0f2b5c]">4. Phân bố điểm</strong>
+              <p className="mt-2">Sau khi hoàn thành dự đoán, bạn có thể xem phân bố điểm xét tuyển dự kiến của người dùng nếu hệ thống đã có đủ dữ liệu.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Biểu đồ giúp hình dung vị trí điểm của bạn trong tập dữ liệu người dùng.</li>
+                <li>Đây không phải phân bố điểm chuẩn chính thức và không thay thế điểm chuẩn của Nhà trường.</li>
+              </ul>
+            </li>
           </ol>
-        </div>
+        </details>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
-          <div className="border-b border-slate-100 pb-3">
-            <h2 className="text-xl font-bold text-[#0f2b5c]">Cách tính điểm dự đoán</h2>
-            <p className="mt-1 text-xs text-slate-500">Điểm được quy đổi về thang 100 trước khi tính.</p>
-          </div>
-          <div className="space-y-3 text-xs leading-relaxed text-slate-700">
-            <p><strong>THPT:</strong> tổng 3 môn tổ hợp × 100 / 30.</p>
-            <p><strong>ĐGNL:</strong> điểm ĐGNL × 100 / 1.200.</p>
-            <p><strong>Học bạ:</strong> tổng điểm 3 môn hoặc tổng điểm người dùng nhập × 100 / 30.</p>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p><strong>DT01:</strong> 45% THPT + 45% ĐGNL + 10% học bạ.</p>
-              <p><strong>DT02:</strong> 90% THPT + 10% học bạ.</p>
-              <p><strong>DT03:</strong> 90% ĐGNL + 10% học bạ.</p>
-            </div>
-            <p>Điểm thành tích và điểm ưu tiên được cộng theo logic hiện tại của hệ thống. Điểm ưu tiên được giảm theo quy tắc hiện hành khi điểm gốc đạt ngưỡng 75/100.</p>
-            <p className="font-semibold text-amber-800">Xác suất chỉ là tham khảo từ khoảng cách giữa điểm dự kiến và điểm chuẩn lịch sử; không phải cam kết trúng tuyển.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="guide-data" className="scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
-        <div className="border-b border-slate-100 pb-3">
-          <h2 className="text-xl font-bold text-[#0f2b5c]">Phương thức xét tuyển theo từng năm</h2>
-          <p className="mt-1 text-xs text-slate-500">Danh sách được tổng hợp từ các mã phương thức thực tế trong Firestore, không phải phương thức dự đoán.</p>
-        </div>
-        {historicalMethods.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {historicalMethods.map(([year, methods]) => (
+        <details id="guide-data" className="group lg:col-span-2 scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-slate-100 pb-3 text-[#0f2b5c] [&::-webkit-details-marker]:hidden">
+          <h2 className="text-lg sm:text-xl font-bold">Phương thức xét tuyển theo từng năm</h2>
+          <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        {groupedHistoricalMethods.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {groupedHistoricalMethods.map(([year, methods]) => (
               <div key={year} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="font-bold text-[#0f2b5c]">Năm {year}</h3>
-                <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-700">
-                  {Array.from(methods).sort().map((method) => <li key={method}>• {method}</li>)}
-                </ul>
+                {year === 2026 ? (
+                  <>
+                    <h3 className="font-bold text-[#0f2b5c]">Năm 2026</h3>
+                    <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-700">
+                      <li>• Phương thức 1 – Xét tuyển thẳng</li>
+                      <li>• Phương thức 2 – Xét tuyển tổng hợp</li>
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-bold text-[#0f2b5c]">Năm {year}</h3>
+                    <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-700">
+                      {Array.from(methods).sort().map((method) => <li key={method}>• {method}</li>)}
+                    </ul>
+                  </>
+                )}
               </div>
             ))}
           </div>
         ) : (
-          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Chưa tải được dữ liệu phương thức từ Firestore.</p>
+          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Chưa tải được dữ liệu phương thức từ hệ thống.</p>
         )}
+        </details>
       </section>
 
       {/* Section 1: Historical method catalog kept for reference */}
@@ -293,73 +326,113 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
         </div>
       </section>
 
-      <section id="guide-system-data" className="scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+      <details id="guide-system-data" className="group scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-slate-100 pb-3 text-[#0f2b5c] [&::-webkit-details-marker]:hidden">
+          <h2 className="text-lg sm:text-xl font-bold">Dữ liệu hệ thống sử dụng</h2>
+          <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
         <div className="border-b border-slate-100 pb-3">
-          <h2 className="text-xl font-bold text-[#0f2b5c]">Dữ liệu hệ thống sử dụng</h2>
-          <p className="text-xs text-slate-500 mt-1">Phân biệt dữ liệu tra cứu thực tế với kết quả mô phỏng của hệ thống.</p>
+          <p className="text-xs text-slate-500 mt-1">Phân biệt dữ liệu thực tế được sử dụng để tra cứu và dữ liệu tham chiếu phục vụ dự đoán.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-700 leading-relaxed">
-          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-2">
-            <h3 className="font-bold text-sm text-[#0f2b5c]">Tra cứu điểm chuẩn</h3>
-            <p>Sử dụng dữ liệu điểm chuẩn thực tế từ Firestore, bộ sưu tập <strong>admission_scores</strong>.</p>
-            <p>Cho phép tra cứu các năm và phương thức mà hệ thống đang có dữ liệu. Dữ liệu tra cứu không được gọi là điểm chuẩn dự đoán.</p>
+        <div className="grid grid-cols-1 gap-4 text-xs leading-relaxed text-slate-700 md:grid-cols-2">
+          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-bold text-[#0f2b5c]">Tra cứu điểm chuẩn</h3>
+              <span className="shrink-0 rounded-md bg-white px-2 py-1 text-[10px] font-bold text-[#0f2b5c]">2023–2026</span>
+            </div>
+            <p>Hệ thống sử dụng dữ liệu điểm chuẩn tuyển sinh thực tế của Trường Đại học Khoa học Xã hội và Nhân văn, ĐHQG-HCM được tích hợp trong hệ thống.</p>
+            <p><strong>Phạm vi dữ liệu:</strong> Người dùng có thể tra cứu theo từng năm, phương thức xét tuyển, hệ đào tạo, tổ hợp và ngành dựa trên dữ liệu đã được cập nhật.</p>
+            <ul className="list-disc space-y-1 pl-4">
+              <li>Chỉ hiển thị dữ liệu thực tế đang tồn tại; không tạo dữ liệu còn thiếu.</li>
+              <li>Không phải mọi phương thức hoặc tổ hợp đều có dữ liệu ở tất cả các năm.</li>
+              <li>Dữ liệu tra cứu là dữ liệu lịch sử/thực tế, không phải kết quả do hệ thống dự đoán.</li>
+            </ul>
           </div>
-          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-2">
-            <h3 className="font-bold text-sm text-[#0f2b5c]">Dự đoán trúng tuyển</h3>
-            <p>Sử dụng điểm người dùng nhập và công thức tính điểm xét tuyển theo phương thức được chọn.</p>
-            <p>Đối chiếu với điểm chuẩn lịch sử phù hợp trong Firestore để tính <strong>xác suất tham khảo</strong> theo từng ngành.</p>
-            <p>Năm 2027 sử dụng điểm chuẩn 2026 làm dữ liệu lịch sử/tham chiếu, không phải điểm chuẩn chính thức 2027 và không tạo điểm chuẩn 2027 giả.</p>
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-bold text-[#0f2b5c]">Dự đoán trúng tuyển</h3>
+              <span className="shrink-0 rounded-md bg-white px-2 py-1 text-[10px] font-bold text-amber-900">Tham chiếu: 2026</span>
+            </div>
+            <p>Hệ thống sử dụng điểm do người dùng nhập, công thức tính điểm xét tuyển theo phương thức được chọn và dữ liệu điểm chuẩn lịch sử phù hợp.</p>
+            <p>Đối với dự đoán kỳ tuyển sinh <strong>2027</strong>, dữ liệu tuyển sinh <strong>2026</strong> được dùng làm dữ liệu lịch sử/tham chiếu gần nhất.</p>
+            <p className="font-semibold text-amber-900">Điểm chuẩn năm 2026 là dữ liệu tham chiếu, không phải điểm chuẩn chính thức của năm 2027.</p>
           </div>
-        </div>
-      </section>
-
-      {/* Section 3: Frequently Asked Questions (FAQ Accordion) */}
-      <section id="guide-faq" className="scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-        <div>
-          <h2 className="text-xl font-bold text-[#0f2b5c]">
-            Câu hỏi Thường gặp (FAQ)
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Giải đáp những thắc mắc phổ biến nhất của thí sinh và phụ huynh trong mùa tuyển sinh
-          </p>
         </div>
 
-        <div className="space-y-3">
-          {FAQ_ITEMS.map((item, index) => {
-            const isOpen = openFaqIndex === index;
-            return (
-              <div
-                key={index}
-                className="rounded-xl border border-slate-200 overflow-hidden transition-colors"
-              >
-                <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 flex items-center justify-between transition-colors focus:outline-hidden"
-                >
-                  <span className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-                    {item.q}
-                  </span>
-                  {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
-                  )}
-                </button>
-                {isOpen && (
-                  <div className="p-4 bg-white text-xs sm:text-sm text-slate-700 leading-relaxed border-t border-slate-200">
-                    {item.a}
-                  </div>
-                )}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">
+          <h3 className="font-bold text-[#0f2b5c]">Nguồn thông tin</h3>
+          <p className="mt-2">Các thông tin về phương thức tuyển sinh, cách tính điểm, điểm cộng, điểm ưu tiên và dữ liệu điểm chuẩn được sử dụng làm cơ sở tham chiếu từ thông tin tuyển sinh chính thức của Trường Đại học Khoa học Xã hội và Nhân văn, ĐHQG-HCM và các quy định tuyển sinh liên quan.</p>
+        </div>
+
+      </details>
+
+      <details className="group scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-slate-100 pb-3 text-[#0f2b5c] [&::-webkit-details-marker]:hidden">
+          <h2 className="text-lg sm:text-xl font-bold">Cách tính mức độ phù hợp và xác suất của hệ thống</h2>
+          <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="space-y-4 text-xs leading-relaxed text-slate-700">
+          <div className="border-b border-slate-100 pb-3">
+            <p className="mt-1 text-slate-500">Các chức năng sử dụng dữ liệu và quy tắc khác nhau, không thay thế kết quả xét tuyển chính thức.</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 p-4">
+              <h4 className="font-bold text-[#0f2b5c]">Điểm xét tuyển dự đoán</h4>
+              <p className="mt-2">Các loại điểm đầu vào được quy đổi về cùng thang 100 trước khi áp dụng công thức của phương thức xét tuyển.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li><strong>THPT:</strong> tổng 3 môn trong tổ hợp được quy đổi từ thang 30 về thang 100.</li>
+                <li><strong>ĐGNL:</strong> điểm từ thang 1.200 được quy đổi về thang 100.</li>
+                <li><strong>Học bạ:</strong> điểm 3 môn trong tổ hợp được quy đổi từ thang 30 về thang 100 theo logic hiện tại.</li>
+              </ul>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-blue-50 p-2"><strong>Đối tượng 1 – ĐHL1</strong><span className="mt-1 block">45% điểm thi tốt nghiệp THPT<br />+ 45% điểm Đánh giá năng lực<br />+ 10% điểm học bạ 3 năm THPT</span></div>
+                <div className="rounded-lg bg-blue-50 p-2"><strong>Đối tượng 2 – ĐHL2</strong><span className="mt-1 block">90% điểm thi tốt nghiệp THPT<br />+ 10% điểm học bạ 3 năm THPT</span></div>
+                <div className="rounded-lg bg-blue-50 p-2"><strong>Đối tượng 3 – ĐHL3</strong><span className="mt-1 block">90% điểm Đánh giá năng lực<br />+ 10% điểm học bạ 3 năm THPT</span></div>
               </div>
-            );
-          })}
+              <p className="mt-3"><strong>Điểm thành tích và điểm ưu tiên</strong> được tính theo quy định tuyển sinh hiện hành của Nhà trường và các quy định liên quan của Bộ Giáo dục và Đào tạo.</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-4">
+              <h4 className="font-bold text-[#0f2b5c]">Định hướng ngành</h4>
+              <p className="mt-2">Hệ thống không sử dụng điểm chuẩn để tính mức độ phù hợp ngành.</p>
+              <div className="mt-3 rounded-lg bg-slate-50 p-3 text-[11px] font-semibold text-[#0f2b5c]">Câu trả lời → Hồ sơ năng lực/sở thích → 9 nhóm yếu tố → So sánh với từng ngành → Mức độ phù hợp (%)</div>
+              <p className="mt-3">Chín nhóm yếu tố gồm: Phân tích, Giao tiếp, Xã hội – con người, Ngôn ngữ, Sáng tạo, Tổ chức – quản lý, Nghiên cứu, Đối ngoại – quốc tế và Công nghệ – dữ liệu.</p>
+              <p className="mt-2">Mức độ phù hợp được tính bằng cách so sánh hồ sơ người dùng với hồ sơ yêu cầu của từng ngành; đây là công cụ hỗ trợ định hướng và <strong>không phải xác suất trúng tuyển</strong>.</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-4">
+              <h4 className="font-bold text-[#0f2b5c]">Xác suất trúng tuyển tham khảo</h4>
+              <p className="mt-2">Sau khi tính điểm xét tuyển, hệ thống so sánh điểm người dùng với dữ liệu điểm chuẩn lịch sử phù hợp của cùng ngành, phương thức, tổ hợp và hệ đào tạo.</p>
+              <div className="mt-3 rounded-lg bg-amber-50 p-3 text-[11px] font-semibold text-amber-900">Điểm xét tuyển → Điểm chuẩn lịch sử phù hợp → Khoảng cách điểm → Mô hình tính xác suất → Xác suất tham khảo</div>
+              <p className="mt-3">Xác suất được chuyển đổi từ khoảng cách giữa điểm xét tuyển và điểm chuẩn tham chiếu theo mô hình tính toán của hệ thống. Hệ thống không tính đơn giản bằng cách lấy điểm xét tuyển chia cho điểm chuẩn.</p>
+              <p className="mt-2">Kết quả chỉ dựa trên dữ liệu lịch sử và không bảo đảm kết quả tuyển sinh thực tế.</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-4">
+              <h4 className="font-bold text-[#0f2b5c]">Mục tiêu điểm</h4>
+              <p className="mt-2">Mức mục tiêu được tham chiếu từ điểm chuẩn phù hợp. Với dự đoán năm 2027, mức tham chiếu này dựa trên dữ liệu tuyển sinh năm 2026, không phải điểm chuẩn chính thức năm 2027.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Điểm chuẩn tham chiếu và mức mục tiêu.</li>
+                <li>Mục tiêu cao hơn điểm tham chiếu hoặc mục tiêu tự nhập.</li>
+                <li>Điểm dự đoán hiện tại và khoảng cách còn thiếu.</li>
+              </ul>
+              <p className="mt-2">Khi điểm hiện tại đã đạt hoặc cao hơn mục tiêu, hệ thống hiển thị “Đã đạt hoặc cao hơn mục tiêu” và không hiển thị khoảng cách âm.</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 p-4">
+            <h4 className="font-bold text-[#0f2b5c]">Phân bố điểm</h4>
+            <p className="mt-2">Biểu đồ được xây dựng từ điểm xét tuyển do người dùng nhập trong các lượt dự đoán hợp lệ, không phải từ điểm chuẩn của Nhà trường. Chỉ các lượt dự đoán bằng <strong>điểm thực tế</strong> được sử dụng; mỗi người dùng được xác định riêng để tránh nhiều lượt của một người làm tăng giả tạo số lượng người dùng. Biểu đồ chỉ hiển thị khi hệ thống có đủ dữ liệu theo điều kiện hiện tại và không tạo dữ liệu giả.</p>
+          </div>
+
         </div>
-      </section>
+      </details>
 
       {/* Contact Banner */}
       <section id="guide-data-notes" className="scroll-mt-24 bg-[#0f2b5c] text-white rounded-2xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
         <div>
-          <h3 className="text-lg sm:text-xl font-bold text-amber-300">
+          <h3 className="text-sm sm:text-lg font-bold text-amber-300 whitespace-nowrap">
             Bạn còn thắc mắc về hệ thống của chúng tôi?
           </h3>
         </div>
@@ -368,7 +441,7 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
           <button
             type="button"
             onClick={() => onSelectTab('messages')}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center space-x-2 border border-white/20"
+            className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center space-x-2 border border-white/20"
           >
             <Mail className="w-4 h-4" />
             <span>Gửi câu hỏi</span>

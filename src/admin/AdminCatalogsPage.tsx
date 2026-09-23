@@ -108,7 +108,7 @@ export const AdminCatalogsPage: React.FC<AdminCatalogsPageProps> = ({
             <span>Firestore: catalogs</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Quản Lý Danh Mục Hệ Thống
+            QUẢN LÝ DANH MỤC HỆ THỐNG
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Cấu hình danh mục hệ đào tạo, tổ hợp môn thi và phương thức xét tuyển tuyển sinh
@@ -190,7 +190,7 @@ export const AdminCatalogsPage: React.FC<AdminCatalogsPageProps> = ({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#f4f7fb] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase">
-                <th className="py-3 px-4 w-36">MÃ ĐỊNH DANH</th>
+                <th className="py-3 px-4 w-40 min-w-40 whitespace-nowrap">MÃ ĐỊNH DANH</th>
                 <th className="py-3 px-4">TÊN HIỂN THỊ</th>
                 <th className="py-3 px-4 w-32 text-center">TRẠNG THÁI</th>
                 <th className="py-3 px-4 w-24 text-center">THAO TÁC</th>
@@ -199,7 +199,7 @@ export const AdminCatalogsPage: React.FC<AdminCatalogsPageProps> = ({
             <tbody className="divide-y divide-slate-100">
               {filteredItems.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50">
-                  <td className="py-3 px-4 font-mono font-bold text-slate-800">{item.code}</td>
+                  <td className="py-3 px-4 w-40 min-w-40 whitespace-nowrap font-mono font-bold text-slate-800">{item.code}</td>
                   <td className="py-3 px-4 font-semibold text-slate-900">{item.name}</td>
                   <td className="py-3 px-4 text-center">
                     <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${

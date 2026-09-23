@@ -811,7 +811,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   if (db && isFirebaseConfigured) {
     try {
-      const predSnap = await getDocs(collection(db, 'prediction_logs'));
+      const predSnap = await getDocs(collection(db, 'user_score_distribution'));
       totalPredictions = predSnap.size;
     } catch {
       totalPredictions = 0;
@@ -824,6 +824,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     }
   }
 
+  const latestUpdatedAt = scores
+    .map((score) => score.updated_at)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
   return {
     totalScores: scores.length,
     totalMajors: uniqueMajors.size,
@@ -832,7 +837,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalPredictions,
     totalPageViews,
     totalAdmins: members.length,
-    lastUpdatedText: scores[0]?.updated_at ? new Date(scores[0].updated_at).toLocaleDateString('vi-VN') : 'Mới nhất',
+    lastUpdatedText: latestUpdatedAt ? new Date(latestUpdatedAt).toLocaleDateString('vi-VN') : 'Chưa có thông tin đồng bộ',
   };
 }
 

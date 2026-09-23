@@ -15,10 +15,8 @@ export const ADMIN_ROUTES = {
   ROOT: '/admin',
   DASHBOARD: '/admin/dashboard',
   SCORES: '/admin/admission-scores',
-  DISTRIBUTION: '/admin/score-distribution',
   MESSAGES: '/admin/user-messages',
   UPLOAD: '/admin/upload',
-  CATEGORIES: '/admin/categories',
   MEMBERS: '/admin/members',
   AUDIT_LOGS: '/admin/audit-logs',
   SETTINGS: '/admin/settings',
@@ -28,10 +26,8 @@ export const ADMIN_ROUTES = {
 export type AdminSubRoute = 
   | 'dashboard' 
   | 'scores' 
-  | 'distribution'
   | 'messages'
   | 'import' 
-  | 'catalogs' 
   | 'members' 
   | 'audit-logs' 
   | 'settings'
@@ -73,14 +69,10 @@ export function resolvePath(target: string): string {
       return ADMIN_ROUTES.DASHBOARD;
     case 'admin-scores':
       return ADMIN_ROUTES.SCORES;
-    case 'admin-distribution':
-      return ADMIN_ROUTES.DISTRIBUTION;
     case 'admin-messages':
       return ADMIN_ROUTES.MESSAGES;
     case 'admin-import':
       return ADMIN_ROUTES.UPLOAD;
-    case 'admin-catalogs':
-      return ADMIN_ROUTES.CATEGORIES;
     case 'admin-members':
       return ADMIN_ROUTES.MEMBERS;
     case 'admin-audit-logs':
@@ -102,10 +94,8 @@ export function getAdminSubRoute(pathname: string): AdminSubRoute {
   
   if (cleanPath === '/admin/login') return 'login';
   if (cleanPath === '/admin/admission-scores' || cleanPath === '/admin/scores') return 'scores';
-  if (cleanPath === '/admin/score-distribution' || cleanPath === '/admin/distribution') return 'distribution';
   if (cleanPath === '/admin/user-messages' || cleanPath === '/admin/messages') return 'messages';
   if (cleanPath === '/admin/upload' || cleanPath === '/admin/import') return 'import';
-  if (cleanPath === '/admin/categories' || cleanPath === '/admin/catalogs') return 'catalogs';
   if (cleanPath === '/admin/members') return 'members';
   if (cleanPath === '/admin/audit-logs') return 'audit-logs';
   if (cleanPath === '/admin/settings') return 'settings';
@@ -139,14 +129,10 @@ export function adminSubRouteToNavTab(subRoute: AdminSubRoute): NavigationTab {
       return 'admin';
     case 'scores':
       return 'admin-scores';
-    case 'distribution':
-      return 'admin-distribution';
     case 'messages':
       return 'admin-messages';
     case 'import':
       return 'admin-import';
-    case 'catalogs':
-      return 'admin-catalogs';
     case 'members':
       return 'admin-members';
     case 'audit-logs':

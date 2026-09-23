@@ -232,7 +232,7 @@ export const AdminImportPage: React.FC<AdminImportPageProps> = ({
             <span>Quy trình nhập dữ liệu chuẩn hóa USSH</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Nhập Dữ Liệu Điểm Chuẩn Tuyển Sinh
+            NHẬP DỮ LIỆU
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Hỗ trợ file Excel (.xlsx, .xls) và CSV. Kiểm tra cú pháp và validate tự động trước khi ghi vào Firestore.

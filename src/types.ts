@@ -8,10 +8,8 @@ export type NavigationTab =
   | 'messages'
   | 'admin'
   | 'admin-scores'
-  | 'admin-distribution'
   | 'admin-messages'
   | 'admin-import'
-  | 'admin-catalogs'
   | 'admin-members'
   | 'admin-audit-logs'
   | 'admin-settings';

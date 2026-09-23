@@ -102,7 +102,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
             <span>Firestore: admins</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Quản Lý Thành Viên & Phân Quyền
+            QUẢN LÝ THÀNH VIÊN & PHÂN QUYỀN
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Phân quyền 3 cấp (Superadmin, Admin, Editor) theo quy chuẩn an toàn dữ liệu tuyển sinh

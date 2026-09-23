@@ -107,14 +107,25 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       // Attempt Firebase Auth sign-in if auth and password are provided
-      if (auth && password) {
-        try {
-          await signInWithEmailAndPassword(auth, normalizedEmail, password);
-        } catch (fbAuthErr: any) {
-          // If Firebase Auth throws, check if it's a known admin member in system for fallback test
-          console.info('Firebase Auth standard login note:', fbAuthErr?.code || fbAuthErr?.message);
-        }
-      }
+         if (!auth || !password) {
+           const errText = 'Không thể xác thực tài khoản quản trị với Firebase.';
+           setError(errText);
+           setLoading(false);
+           return { success: false, error: errText };
+         }
+
+         try {
+           await signInWithEmailAndPassword(auth, normalizedEmail, password);
+         } catch (fbAuthErr: any) {
+           const errText = fbAuthErr?.code === 'auth/invalid-credential'
+             || fbAuthErr?.code === 'auth/wrong-password'
+             || fbAuthErr?.code === 'auth/user-not-found'
+             ? 'Email hoặc mật khẩu quản trị không đúng.'
+             : fbAuthErr?.message || 'Không thể xác thực tài khoản quản trị với Firebase.';
+           setError(errText);
+           setLoading(false);
+           return { success: false, error: errText };
+         }
 
       // Verify authorization from Firestore / Admin Members database
       const member = await findAdminMemberByEmail(normalizedEmail);

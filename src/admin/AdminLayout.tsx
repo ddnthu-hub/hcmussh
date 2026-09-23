@@ -4,7 +4,6 @@ import {
   LayoutDashboard, 
   FileSpreadsheet, 
   Upload, 
-  Layers, 
   Users, 
   History, 
   Settings, 
@@ -62,15 +61,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   }, []);
 
   const navItems: { tab: NavigationTab; path: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { tab: 'admin', path: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+    { tab: 'admin', path: '/admin/dashboard', label: 'Tổng quan hệ thống', icon: LayoutDashboard },
     { tab: 'admin-scores', path: '/admin/admission-scores', label: 'Quản lý điểm chuẩn', icon: FileSpreadsheet },
-    { tab: 'admin-distribution', path: '/admin/score-distribution', label: 'Phân bố điểm', icon: History },
     { tab: 'admin-messages', path: '/admin/user-messages', label: 'Câu hỏi người dùng', icon: Mail },
     { tab: 'admin-import', path: '/admin/upload', label: 'Nhập dữ liệu', icon: Upload },
-    { tab: 'admin-catalogs', path: '/admin/categories', label: 'Danh mục hệ thống', icon: Layers },
-    { tab: 'admin-members', path: '/admin/members', label: 'Thành viên & Phân quyền', icon: Users },
+    { tab: 'admin-members', path: '/admin/members', label: 'Quản lý thành viên', icon: Users },
     { tab: 'admin-audit-logs', path: '/admin/audit-logs', label: 'Nhật ký hoạt động', icon: History },
-    { tab: 'admin-settings', path: '/admin/settings', label: 'Cài đặt hệ thống', icon: Settings },
+    { tab: 'admin-settings', path: '/admin/settings', label: 'Cài đặt & cấu hình', icon: Settings },
   ];
 
   const handleNavClick = (tab: NavigationTab) => {
@@ -103,18 +100,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       } as React.CSSProperties}
     >
       {/* Admin Top Header */}
-      <header className="bg-white/95 text-[#0b2a4a] sticky top-0 z-40 border-b border-[#dfeaf5] shadow-[0_6px_18px_rgba(15,43,92,0.06)] backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="fixed inset-x-0 top-0 z-40 bg-white/95 text-[#0b2a4a] border-b border-[#dfeaf5] shadow-[0_6px_18px_rgba(15,43,92,0.06)] backdrop-blur-sm">
+        <div className="w-full px-3 sm:px-4 lg:px-5 h-16 flex items-center justify-between">
           {/* Left branding */}
           <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-[#0b2a4a] hover:text-[#8f1d2c] hover:bg-[#e8f1f8]"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-
             <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavClick('admin')}>
               <div className="flex items-center gap-2 shrink-0">
                 <img src="/logo-dhqg.jpg" alt="Logo Đại học Quốc gia Thành phố Hồ Chí Minh" className="h-8 w-auto rounded-sm object-contain" />
@@ -146,29 +135,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               </span>
             </div>
 
-            {/* Switch Role Quick Tester for testing roles (superadmin, admin, editor) */}
-            {onChangeAdminRole && (
-              <div className="hidden lg:flex items-center space-x-1 bg-[#e8f1f8] px-2 py-1 rounded-md text-[11px]">
-                <span className="text-slate-500">Vai trò:</span>
-                <select
-                  value={currentAdminRole}
-                  onChange={(e) => onChangeAdminRole(e.target.value as AdminRole)}
-                  className="bg-transparent text-[#8f1d2c] font-bold outline-none cursor-pointer"
-                >
-                  <option value="superadmin" className="text-slate-900">Superadmin</option>
-                  <option value="admin" className="text-slate-900">Admin</option>
-                  <option value="editor" className="text-slate-900">Editor</option>
-                </select>
-              </div>
-            )}
-
             {/* Back to Candidate Portal */}
             <button
               onClick={() => {
                 if (onGoToPublic) onGoToPublic();
                 else handleNavClick('home');
               }}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#edf5ff] hover:bg-[#dfeeff] text-[#0b2a4a] font-semibold transition-colors cursor-pointer"
+              className="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#edf5ff] hover:bg-[#dfeeff] text-[#0b2a4a] font-semibold transition-colors cursor-pointer"
               title="Về website người dùng công khai"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -180,23 +153,31 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white font-semibold transition-colors cursor-pointer"
+                className="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#8f1d2c] hover:bg-[#731624] text-white font-semibold transition-colors cursor-pointer"
                 title="Đăng xuất quản trị"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Đăng xuất</span>
               </button>
             )}
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-[#0b2a4a] hover:text-[#8f1d2c] hover:bg-[#e8f1f8]"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Container with Sidebar + Content */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
+      <div className="flex-1 w-full px-3 sm:px-4 lg:px-5 pt-20 pb-6 flex gap-5">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:block w-64 shrink-0">
+        <aside className="hidden md:block w-80 shrink-0 sticky top-20 self-start h-fit">
           <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-xs sticky top-22">
-            <div className="px-3 py-2 text-[11px] font-extrabold text-[#8f1d2c] uppercase tracking-wider">
+            <div className="px-3 py-2 text-sm font-extrabold text-[#8f1d2c] uppercase tracking-wider">
               Danh mục quản trị
             </div>
             <nav className="space-y-1 mt-1">
@@ -238,7 +219,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex">
+          <div className="md:hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex flex-row-reverse">
             <div className="w-72 bg-white h-full p-4 flex flex-col justify-between shadow-xl">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -281,7 +262,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 cursor-pointer"
+                    className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-[#8f1d2c] text-white text-xs font-semibold hover:bg-[#731624] cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Đăng xuất</span>
@@ -295,7 +276,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Về cổng thí sinh</span>
+                  <span>Về cổng người dùng</span>
                 </button>
               </div>
             </div>

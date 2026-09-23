@@ -79,15 +79,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onSelectTab('/cam-nang#guide-faq')}
-                  className="font-semibold hover:text-[#ffd21a] hover:underline text-white transition-colors flex items-center space-x-1.5 cursor-pointer"
-                >
-                  <ArrowRight className="w-3 h-3 text-rose-300" />
-                  <span>Câu hỏi thường gặp (FAQ)</span>
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => onSelectTab('/cam-nang#guide-system-data')}
                   className="font-semibold hover:text-[#ffd21a] hover:underline text-white transition-colors flex items-center space-x-1.5 cursor-pointer"
                 >

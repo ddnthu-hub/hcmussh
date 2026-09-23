@@ -18,7 +18,7 @@ import {
   where, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { getFirestoreDb, isFirebaseConfigured, auth } from './firebase';
+import { ensurePublicUser, getFirestoreDb, isFirebaseConfigured } from './firebase';
 import { getPredictionHistory } from './predictionHistory';
 
 export const USER_DISTRIBUTION_COLLECTION = 'user_score_distribution';
@@ -29,6 +29,8 @@ export interface UserScoreRecord {
   userAdmissionScore: number;
   year: number;
   userId?: string;
+  scoreType?: 'real' | 'fake';
+  isReal?: boolean;
   createdAt?: any;
   majorCode?: string;
   majorName?: string;
@@ -154,7 +156,8 @@ export async function saveUserScoreDistribution(params: {
 
   // 2. Chống ghi trùng: Nếu cùng một chữ ký hoặc đang trong quá trình ghi thì bỏ qua
   const roundedScore = Number(userAdmissionScore.toFixed(2));
-  const signature = uniqueKey || `${year}_${roundedScore}`;
+  const firebaseUser = isFirebaseConfigured ? await ensurePublicUser() : null;
+  const signature = uniqueKey || `${firebaseUser?.uid || 'local'}_${year}_${roundedScore}`;
 
   if (lastSavedSignature === signature) {
     console.log('[UserScoreDistribution] Bỏ qua ghi trùng cho cùng một lượt phân tích:', signature);
@@ -180,6 +183,8 @@ export async function saveUserScoreDistribution(params: {
 
     const payload: Record<string, any> = {
       userAdmissionScore: roundedScore,
+      scoreType: 'real',
+      isReal: true,
       year,
       majorCode: majorCode || '',
       majorName: majorName || '',
@@ -190,10 +195,7 @@ export async function saveUserScoreDistribution(params: {
       createdAt: serverTimestamp(),
     };
 
-    // Nếu có user authentication thì lưu userId ẩn danh, tuyệt đối KHÔNG lưu thông tin cá nhân
-    if (auth && auth.currentUser) {
-      payload.userId = auth.currentUser.uid;
-    }
+    if (firebaseUser) payload.userId = firebaseUser.uid;
 
     const collRef = collection(db, USER_DISTRIBUTION_COLLECTION);
     await addDoc(collRef, payload);
@@ -250,21 +252,27 @@ export async function getUserScoreDistribution(
     const records: UserScoreRecord[] = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const score = Number(data.userAdmissionScore);
-      const isRealScore = data.scoreType ? data.scoreType === 'real' : data.isReal !== false;
+      const score = Number(data.userAdmissionScore ?? data.score);
+      const isRealScore = data.scoreType
+        ? String(data.scoreType).toLowerCase() === 'real'
+        : data.isReal !== false;
 
       if (
         typeof score === 'number' &&
         !isNaN(score) &&
         score >= 0 &&
         score <= 100 &&
-        isRealScore
+        isRealScore &&
+        typeof data.userId === 'string' &&
+        data.userId.length > 0
       ) {
         records.push({
           id: docSnap.id,
           userAdmissionScore: score,
           year: Number(data.year) || year,
           userId: data.userId,
+          scoreType: 'real',
+          isReal: true,
           createdAt: data.createdAt,
           majorCode: data.majorCode,
           majorName: data.majorName,
@@ -296,9 +304,11 @@ export async function getManagedUserScoreDistribution(forceRefresh = false): Pro
       const data = docSnap.data();
       return {
         id: docSnap.id,
-        userAdmissionScore: Number(data.userAdmissionScore),
+        userAdmissionScore: Number(data.userAdmissionScore ?? data.score),
         year: Number(data.year),
         userId: data.userId,
+        scoreType: (data.scoreType === 'fake' ? 'fake' : 'real') as 'real' | 'fake',
+        isReal: data.isReal !== false,
         createdAt: data.createdAt,
         majorCode: data.majorCode,
         majorName: data.majorName,
@@ -425,11 +435,6 @@ export function getValidDistributionUserCount(records: UserScoreRecord[]): numbe
   for (const record of records) {
     if (record.userId) {
       uniqueUserIds.add(record.userId);
-      continue;
-    }
-
-    if (record.id) {
-      uniqueUserIds.add(record.id);
     }
   }
 

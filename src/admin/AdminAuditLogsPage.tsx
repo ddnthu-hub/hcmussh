@@ -77,7 +77,7 @@ export const AdminAuditLogsPage: React.FC = () => {
             <span>Firestore: audit_logs</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
-            Nhật Ký Hoạt Động Hệ Thống
+            NHẬT KÝ HOẠT ĐỘNG HỆ THỐNG
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Lịch sử kiểm toán các thao tác thêm, sửa, xóa, nhập dữ liệu và phiên đăng nhập của quản trị viên

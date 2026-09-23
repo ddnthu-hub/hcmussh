@@ -3,10 +3,8 @@ import { useAdminAuth } from './auth/AdminAuthContext';
 import { AdminLayout } from './AdminLayout';
 import { AdminDashboardPage } from './AdminDashboardPage';
 import { AdminScoresPage } from './AdminScoresPage';
-import { AdminDistributionPage } from './AdminDistributionPage';
 import { AdminMessagesPage } from './AdminMessagesPage';
 import { AdminImportPage } from './AdminImportPage';
-import { AdminCatalogsPage } from './AdminCatalogsPage';
 import { AdminMembersPage } from './AdminMembersPage';
 import { AdminAuditLogsPage } from './AdminAuditLogsPage';
 import { AdminSettingsPage } from './AdminSettingsPage';
@@ -102,12 +100,6 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
           currentAdminRole={adminRole}
         />
       )}
-      {subRoute === 'distribution' && (
-        <AdminDistributionPage
-          currentAdminEmail={adminUser?.email || ''}
-          currentAdminRole={adminRole}
-        />
-      )}
       {subRoute === 'messages' && (
         <AdminMessagesPage
           currentAdminEmail={adminUser?.email || ''}
@@ -116,12 +108,6 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
       )}
       {subRoute === 'import' && (
         <AdminImportPage
-          currentAdminEmail={adminUser?.email || ''}
-          currentAdminRole={adminRole}
-        />
-      )}
-      {subRoute === 'catalogs' && (
-        <AdminCatalogsPage
           currentAdminEmail={adminUser?.email || ''}
           currentAdminRole={adminRole}
         />
