@@ -17,7 +17,6 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { getAuth, Auth, signInAnonymously } from 'firebase/auth';
-import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
 import { 
   AdmissionScoreDoc, 
   AuditLogDoc, 
@@ -50,7 +49,6 @@ export const isFirebaseConfigured = Boolean(
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
-let functionsClient: Functions | null = null;
 
 if (isFirebaseConfigured) {
   try {
@@ -59,7 +57,6 @@ if (isFirebaseConfigured) {
     const databaseId = firebaseAppletConfig.firestoreDatabaseId || '(default)';
     db = getFirestore(app, databaseId);
     auth = getAuth(app);
-    functionsClient = getFunctions(app);
   } catch (err) {
     console.warn('Firebase initialization notice:', err);
   }
@@ -68,15 +65,29 @@ if (isFirebaseConfigured) {
 export { auth };
 
 export async function inviteAdminMember(params: { email: string; name: string; role: 'admin' | 'editor' }): Promise<void> {
-  if (!functionsClient) throw new Error('Firebase Cloud Functions chưa được cấu hình.');
-  const callable = httpsCallable<typeof params, { success: boolean; status: string }>(functionsClient, 'inviteAdminMember');
-  await callable(params);
+  if (!auth?.currentUser) throw new Error('Vui lòng đăng nhập lại tài khoản Super Admin.');
+  const token = await auth.currentUser.getIdToken();
+  const response = await fetch('/api/admin/invite-member', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+  const result = await response.json() as { message?: string };
+  if (!response.ok) throw new Error(result.message || 'Không thể gửi lời mời cán bộ.');
 }
 
 export async function activateAdminMember(): Promise<void> {
-  if (!functionsClient) throw new Error('Firebase Cloud Functions chưa được cấu hình.');
-  const callable = httpsCallable<undefined, { success: boolean }>(functionsClient, 'activateAdminMember');
-  await callable(undefined);
+  if (!auth?.currentUser) throw new Error('Vui lòng đăng nhập lại tài khoản được mời.');
+  const token = await auth.currentUser.getIdToken();
+  const response = await fetch('/api/admin/activate-member', {
+    method: 'POST',
+    headers: {Authorization: `Bearer ${token}`},
+  });
+  const result = await response.json() as { message?: string };
+  if (!response.ok) throw new Error(result.message || 'Không thể kích hoạt tài khoản.');
 }
 
 export async function ensurePublicUser(): Promise<{ uid: string; email: string }> {

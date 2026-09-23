@@ -32,7 +32,6 @@ import {
   TrendingUp, 
   Users, 
   Award, 
-  CheckCircle2, 
   Target, 
   ArrowRight, 
   Sparkles,
@@ -697,66 +696,6 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
             </div>
           </div>
 
-          {/* Table Breakdown of Buckets */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-            <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-bold text-[#0f2b5c]">
-                  Bảng chi tiết 8 khoảng phân bố điểm xét tuyển người dùng
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Thang điểm 100 theo Quy chế tuyển sinh năm 2026.
-                </p>
-              </div>
-              <span className="text-xs font-bold text-blue-900 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200 shrink-0">
-                Năm tuyển sinh: 2026
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-700 font-bold">
-                    <th className="py-2.5 px-4">Khoảng điểm</th>
-                    <th className="py-2.5 px-4 text-center">Số người dùng</th>
-                    <th className="py-2.5 px-4 text-center">Tỷ lệ (%)</th>
-                    <th className="py-2.5 px-4 text-right">Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {distributionBuckets.map((bucket) => {
-                    const isUserBucket = bucket.range === userBucketRange;
-                    return (
-                      <tr 
-                        key={bucket.range} 
-                        className={`transition-colors ${isUserBucket ? 'bg-amber-50/70 font-bold text-slate-900' : 'hover:bg-slate-50/60 text-slate-700'}`}
-                      >
-                        <td className="py-3 px-4 font-mono">
-                          {bucket.range}
-                        </td>
-                        <td className="py-3 px-4 text-center font-mono">
-                          {bucket.userCount} người
-                        </td>
-                        <td className="py-3 px-4 text-center font-mono">
-                          {bucket.percentage}%
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {isUserBucket ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[11px] font-bold">
-                              <CheckCircle2 className="w-3 h-3 text-amber-700" />
-                              Điểm của bạn ({userScore.toFixed(2)}đ)
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-[11px]">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 

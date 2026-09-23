@@ -2066,7 +2066,7 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
                         <TrendingUp className="w-5 h-5 text-amber-500" />
                         <span>Đánh giá khả năng trúng tuyển</span>
                       </h4>
-                      <span className="text-xs text-slate-600 font-bold bg-slate-100 px-2.5 py-1 rounded-md">Đánh giá</span>
+                      <span className="text-xs text-slate-600 font-bold bg-slate-100 px-2.5 py-1 rounded-md">Xác suất trúng tuyển</span>
                     </div>
 
                     <div className="space-y-3">
@@ -2078,6 +2078,9 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
                               <p className="text-xs text-slate-500">Mã ngành: {assessment.major.code} · Điểm chuẩn tham chiếu: {assessment.cutoff !== null ? `${assessment.cutoff.toFixed(2)}/100` : 'Chưa có dữ liệu'}</p>
                             </div>
                             <div className="flex flex-wrap items-center justify-end gap-2">
+                              <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
+                                Xác suất trúng tuyển: {assessment.probability !== null ? `${assessment.probability.toFixed(2)}%` : 'Chưa có dữ liệu'}
+                              </span>
                               <span className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${assessment.levelBadge}`}>{assessment.levelLabel}</span>
                             </div>
                           </div>
@@ -2179,7 +2182,7 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
                           <th className="py-2.5 px-3">Mã ngành</th>
                           <th className="py-2.5 px-3">Tên ngành</th>
                           <th className="py-2.5 px-3 text-center">Chênh lệch</th>
-                          <th className="py-2.5 px-3 text-center">Đánh giá</th>
+                          <th className="py-2.5 px-3 text-center">Xác suất trúng tuyển</th>
                           <th className="py-2.5 px-3 text-center">Mức độ</th>
                         </tr>
                       </thead>
@@ -2239,7 +2242,7 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
                       <TrendingUp className="w-5 h-5 text-amber-500" />
                       <span>Đánh giá khả năng trúng tuyển</span>
                     </h4>
-                    <span className="text-xs text-slate-600 font-bold bg-slate-100 px-2.5 py-1 rounded-md">Đánh giá</span>
+                    <span className="text-xs text-slate-600 font-bold bg-slate-100 px-2.5 py-1 rounded-md">Xác suất trúng tuyển</span>
                   </div>
                   <p className="text-xs leading-relaxed text-slate-600">Kết quả được đánh giá trên cơ sở mức chênh lệch giữa điểm xét tuyển dự kiến và điểm chuẩn 2026 phù hợp. Đây không phải kết quả trúng tuyển chính thức hay mô hình dự báo cá nhân.</p>
                   <div className="space-y-3">
@@ -2251,6 +2254,9 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
                             <p className="text-xs text-slate-500">Mã ngành: {assessment.major.code} · Điểm chuẩn tham chiếu: {assessment.cutoff !== null ? `${assessment.cutoff.toFixed(2)}/100` : 'Chưa có dữ liệu'}</p>
                           </div>
                           <div className="flex flex-wrap items-center justify-end gap-2">
+                            <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800">
+                              Xác suất trúng tuyển: {assessment.probability !== null ? `${assessment.probability.toFixed(2)}%` : 'Chưa có dữ liệu'}
+                            </span>
                             <span className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${assessment.levelBadge}`}>{assessment.levelLabel}</span>
                           </div>
                         </div>
