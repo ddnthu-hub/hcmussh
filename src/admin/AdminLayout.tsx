@@ -22,6 +22,7 @@ interface AdminLayoutProps {
   onSelectTab: (tab: NavigationTab) => void;
   children: React.ReactNode;
   currentAdminEmail: string;
+  currentAdminName: string;
   currentAdminRole: AdminRole;
   onChangeAdminRole?: (role: AdminRole) => void;
   onLogout?: () => void;
@@ -33,6 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   onSelectTab,
   children,
   currentAdminEmail,
+  currentAdminName,
   currentAdminRole,
   onChangeAdminRole,
   onLogout,
@@ -63,27 +65,32 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const navItems: { tab: NavigationTab; path: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { tab: 'admin', path: '/admin/dashboard', label: 'Tổng quan hệ thống', icon: LayoutDashboard },
     { tab: 'admin-scores', path: '/admin/admission-scores', label: 'Quản lý điểm chuẩn', icon: FileSpreadsheet },
-    { tab: 'admin-messages', path: '/admin/user-messages', label: 'Câu hỏi người dùng', icon: Mail },
     { tab: 'admin-import', path: '/admin/upload', label: 'Nhập dữ liệu', icon: Upload },
     { tab: 'admin-members', path: '/admin/members', label: 'Quản lý thành viên', icon: Users },
     { tab: 'admin-audit-logs', path: '/admin/audit-logs', label: 'Nhật ký hoạt động', icon: History },
+    { tab: 'admin-messages', path: '/admin/user-messages', label: 'Câu hỏi người dùng', icon: Mail },
     { tab: 'admin-settings', path: '/admin/settings', label: 'Cài đặt & cấu hình', icon: Settings },
   ];
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.tab === 'admin-members' || item.tab === 'admin-settings') return currentAdminRole === 'superadmin';
+    if (item.tab === 'admin-import') return currentAdminRole === 'superadmin' || currentAdminRole === 'admin';
+    return true;
+  });
+
+  const displayAdminName = currentAdminName.trim()
+    && currentAdminName.trim().toLowerCase() !== currentAdminEmail.trim().toLowerCase()
+    ? currentAdminName.trim()
+    : 'Quản trị viên';
+  const displayAdminRole = currentAdminRole === 'superadmin'
+    ? 'Super Admin'
+    : currentAdminRole === 'admin'
+      ? 'Admin'
+      : 'Editor';
 
   const handleNavClick = (tab: NavigationTab) => {
     onSelectTab(tab);
     setMobileMenuOpen(false);
-  };
-
-  const getRoleBadgeStyle = (role: AdminRole) => {
-    switch (role) {
-      case 'superadmin':
-        return 'bg-purple-100 text-purple-900 border-purple-200';
-      case 'admin':
-        return 'bg-blue-100 text-blue-900 border-blue-200';
-      case 'editor':
-        return 'bg-emerald-100 text-emerald-900 border-emerald-200';
-    }
   };
 
   return (
@@ -127,11 +134,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               <UserCheck className="w-4 h-4 text-[#8f1d2c] shrink-0" />
               <div className="text-left">
                 <span className="block font-medium text-[#173b63] truncate max-w-[180px]">
-                  {currentAdminEmail}
+                  {displayAdminName}
                 </span>
               </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${getRoleBadgeStyle(currentAdminRole)}`}>
-                {currentAdminRole}
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-slate-200 bg-white text-[#173b63]">
+                {displayAdminRole}
               </span>
             </div>
 
@@ -181,7 +188,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               Danh mục quản trị
             </div>
             <nav className="space-y-1 mt-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentTab === item.tab;
                 return (
@@ -236,7 +243,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 </div>
 
                 <nav className="space-y-1 mt-4">
-                  {navItems.map((item) => {
+                  {visibleNavItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentTab === item.tab;
                     return (
@@ -276,7 +283,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Về cổng người dùng</span>
+                  <span>Về cổng hệ thống</span>
                 </button>
               </div>
             </div>

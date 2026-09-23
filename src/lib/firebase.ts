@@ -21,6 +21,7 @@ import {
   AdmissionScoreDoc, 
   AuditLogDoc, 
   AdminMemberDoc, 
+  AdminRole,
   CatalogItemDoc,
   PredictionLogDoc,
   PageViewDoc
@@ -660,11 +661,19 @@ export async function findAdminMemberByEmail(email: string): Promise<AdminMember
 export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAdminEmail: string): Promise<void> {
   const isNew = !member.id;
   const docId = member.id || `admin_${Date.now()}`;
+  const normalizedRole = String(member.role || 'editor').trim().toLowerCase().replace(/[-\s]+/g, '_');
+  if (isNew && (normalizedRole === 'superadmin' || normalizedRole === 'super_admin')) {
+    throw new Error('Không thể tạo thêm tài khoản Super Admin.');
+  }
+  if (!isNew && (normalizedRole === 'superadmin' || normalizedRole === 'super_admin')
+      && (String(member.email || '').trim().toLowerCase() !== 'vovanthu25122000@gmail.com' || member.status !== 'active')) {
+    throw new Error('Không thể thay đổi email hoặc trạng thái của Super Admin duy nhất.');
+  }
   const payload: AdminMemberDoc = {
     id: docId,
     email: String(member.email || '').trim().toLowerCase(),
     name: String(member.name || 'Cán bộ quản trị'),
-    role: member.role || 'editor',
+    role: (normalizedRole === 'super_admin' ? (member.role as AdminRole) : normalizedRole) as AdminRole,
     status: member.status || 'active',
     created_at: member.created_at || new Date().toISOString(),
     last_login: member.last_login || new Date().toISOString(),
@@ -797,6 +806,9 @@ export interface DashboardStats {
   totalPageViews: number;
   totalAdmins: number;
   lastUpdatedText: string;
+  predictionsError: string | null;
+  pageViewsError: string | null;
+  pageViewsTracked: boolean;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -808,19 +820,23 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   let totalPredictions = 0;
   let totalPageViews = 0;
+  let predictionsError: string | null = null;
+  let pageViewsError: string | null = null;
+  const pageViewsTracked = false;
 
   if (db && isFirebaseConfigured) {
     try {
       const predSnap = await getDocs(collection(db, 'user_score_distribution'));
-      totalPredictions = predSnap.size;
-    } catch {
-      totalPredictions = 0;
-    }
-    try {
-      const viewSnap = await getDocs(collection(db, 'page_views'));
-      totalPageViews = viewSnap.size;
-    } catch {
-      totalPageViews = 0;
+      totalPredictions = predSnap.docs.filter((prediction) => {
+        const data = prediction.data();
+        return String(data.scoreType || '').toLowerCase() === 'real'
+          && data.isReal === true
+          && typeof data.userId === 'string'
+          && data.userId.trim().length > 0;
+      }).length;
+    } catch (err) {
+      predictionsError = err instanceof Error ? err.message : String(err);
+      console.error('Error loading prediction statistics:', err);
     }
   }
 
@@ -838,6 +854,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalPageViews,
     totalAdmins: members.length,
     lastUpdatedText: latestUpdatedAt ? new Date(latestUpdatedAt).toLocaleDateString('vi-VN') : 'Chưa có thông tin đồng bộ',
+    predictionsError,
+    pageViewsError,
+    pageViewsTracked,
   };
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getAuditLogs } from '../lib/firebase';
-import { AuditLogDoc } from '../types';
+import { getAdminMembers, getAuditLogs } from '../lib/firebase';
+import { AdminMemberDoc, AuditLogDoc } from '../types';
 import { 
   History, 
   Search, 
@@ -15,6 +15,7 @@ import {
 
 export const AdminAuditLogsPage: React.FC = () => {
   const [logs, setLogs] = useState<AuditLogDoc[]>([]);
+  const [members, setMembers] = useState<AdminMemberDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAction, setSelectedAction] = useState<string>('all');
@@ -22,8 +23,9 @@ export const AdminAuditLogsPage: React.FC = () => {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const data = await getAuditLogs();
+      const [data, memberList] = await Promise.all([getAuditLogs(), getAdminMembers()]);
       setLogs(data);
+      setMembers(memberList);
     } catch (err) {
       console.error('Error fetching audit logs:', err);
     } finally {
@@ -67,6 +69,17 @@ export const AdminAuditLogsPage: React.FC = () => {
     }
   };
 
+  const getDisplayDetails = (details: string) => {
+    return details
+      .replace(/^Cán bộ .*?\s*\([^)]*\)\s+(đăng nhập quản trị thành công.*)$/i, '$1')
+      .replace(/^Cán bộ .*?\s+(đăng xuất khỏi hệ thống quản trị\.)$/i, '$1');
+  };
+
+  const getActorName = (email: string) => {
+    const member = members.find((item) => item.email.trim().toLowerCase() === email.trim().toLowerCase());
+    return member?.name || email;
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
@@ -100,7 +113,7 @@ export const AdminAuditLogsPage: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo email, chi tiết thao tác hoặc ID bản ghi..."
+            placeholder="Tìm theo email hoặc chi tiết thao tác..."
             className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none"
           />
         </div>
@@ -131,9 +144,8 @@ export const AdminAuditLogsPage: React.FC = () => {
                 <th className="py-3 px-4 w-36">THỜI GIAN</th>
                 <th className="py-3 px-4 w-44">NGƯỜI THỰC HIỆN</th>
                 <th className="py-3 px-4 w-28 text-center">HÀNH ĐỘNG</th>
-                <th className="py-3 px-4 w-32">BỘ SƯU TẬP</th>
-                <th className="py-3 px-4">CHI TIẾT THAO TÁC</th>
-                <th className="py-3 px-4 w-24 text-center">KẾT QUẢ</th>
+                <th className="w-[55vw] min-w-[220px] py-3 px-4 lg:w-auto lg:min-w-0">CHI TIẾT THAO TÁC</th>
+                <th className="py-3 px-4 w-28 min-w-28 text-center whitespace-nowrap">TRẠNG THÁI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -143,22 +155,14 @@ export const AdminAuditLogsPage: React.FC = () => {
                     {new Date(log.timestamp).toLocaleString('vi-VN')}
                   </td>
                   <td className="py-3 px-4 font-semibold text-slate-900 truncate max-w-[160px]">
-                    {log.admin_email}
+                    {getActorName(log.admin_email)}
                   </td>
                   <td className="py-3 px-4 text-center">{getActionBadge(log.action)}</td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                    {log.collection_name}
-                  </td>
-                  <td className="py-3 px-4 text-slate-700">
-                    <div>{log.details}</div>
-                    {log.document_id && (
-                      <div className="font-mono text-[10px] text-slate-400 mt-0.5 truncate max-w-xs">
-                        ID: {log.document_id}
-                      </div>
-                    )}
+                  <td className="w-[55vw] min-w-[220px] py-3 px-4 text-slate-700 break-words lg:w-auto lg:min-w-0">
+                    {getDisplayDetails(log.details)}
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                    <span className={`inline-flex items-center space-x-1 whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold ${
                       log.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
                       {log.status === 'SUCCESS' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -170,7 +174,7 @@ export const AdminAuditLogsPage: React.FC = () => {
 
               {filteredLogs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">
                     {loading ? 'Đang tải nhật ký...' : 'Chưa có nhật ký hoạt động nào'}
                   </td>
                 </tr>

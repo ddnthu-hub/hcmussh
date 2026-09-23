@@ -65,6 +65,15 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
     return <AccessDeniedPage />;
   }
 
+  const isSuperadminOnlyRoute = subRoute === 'members' || subRoute === 'settings';
+  const canAccessImport = adminRole === 'superadmin' || adminRole === 'admin';
+  if (isSuperadminOnlyRoute && adminRole !== 'superadmin') {
+    return <AccessDeniedPage />;
+  }
+  if (subRoute === 'import' && !canAccessImport) {
+    return <AccessDeniedPage />;
+  }
+
   // 4. Authenticated & Authorized admin officer -> render AdminLayout with sub-page
   const currentTab: NavigationTab = adminSubRouteToNavTab(subRoute);
 
@@ -86,6 +95,7 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
       currentTab={currentTab}
       onSelectTab={handleSelectTab}
       currentAdminEmail={adminUser?.email || 'admin@ussh.edu.vn'}
+      currentAdminName={adminUser?.name || ''}
       currentAdminRole={adminRole}
       onChangeAdminRole={setAdminRole}
       onLogout={handleLogout}

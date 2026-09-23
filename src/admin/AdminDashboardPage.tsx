@@ -38,9 +38,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
   const [recentScores, setRecentScores] = useState<AdmissionScoreDoc[]>([]);
   const [recentLogs, setRecentLogs] = useState<AuditLogDoc[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [dashStats, allScores, logs] = await Promise.all([
         getDashboardStats(),
@@ -56,6 +58,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
       setRecentLogs(logs.slice(0, 5));
     } catch (err) {
       console.error('Error loading admin dashboard stats:', err);
+      setLoadError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -180,9 +183,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
           <div>
             <span className="text-xs text-slate-500 font-medium">Lượt dự đoán đã ghi nhận</span>
             <div className="text-xl font-bold text-[var(--ussh-blue-dark)] mt-1">
-              {loading ? '...' : (stats?.totalPredictions > 0 ? stats.totalPredictions.toLocaleString() : '0 (Chưa có dữ liệu)')}
+              {loading
+                ? 'Đang tải...'
+                : loadError
+                  ? 'Không thể tải dữ liệu'
+                : stats?.predictionsError
+                  ? 'Không thể tải dữ liệu'
+                  : stats?.totalPredictions
+                    ? stats.totalPredictions.toLocaleString()
+                    : 'Chưa có dữ liệu'}
             </div>
-            <span className="text-[10px] text-[#8f1d2c] font-medium">Dữ liệu dự đoán thực tế đã lưu</span>
+            <span className="text-[10px] text-[#8f1d2c] font-medium">
+              {loadError || stats?.predictionsError ? 'Kiểm tra kết nối và quyền truy cập Firestore' : 'Lượt ghi nhận từ user_score_distribution'}
+            </span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center">
             <TrendingUp className="w-4 h-4" />
@@ -194,9 +207,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
           <div>
             <span className="text-xs text-slate-500 font-medium">Dữ liệu lượt truy cập</span>
             <div className="text-xl font-bold text-[#8f1d2c] mt-1">
-              {loading ? '...' : (stats?.totalPageViews > 0 ? stats.totalPageViews.toLocaleString() : 'Chưa có dữ liệu')}
+              {loading
+                ? 'Đang tải...'
+                : loadError
+                  ? 'Không thể tải dữ liệu'
+                : stats?.pageViewsError
+                  ? 'Không thể tải dữ liệu'
+                  : stats?.pageViewsTracked && stats.totalPageViews
+                    ? stats.totalPageViews.toLocaleString()
+                    : 'Chưa có dữ liệu lượt truy cập'}
             </div>
-            <span className="text-[10px] text-[#8f1d2c] font-medium">Lượt truy cập được ghi nhận</span>
+            <span className="text-[10px] text-[#8f1d2c] font-medium">
+              {loadError || stats?.pageViewsError ? 'Kiểm tra kết nối và quyền truy cập Firestore' : 'Hệ thống chưa có cơ chế ghi nhận lượt truy cập'}
+            </span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#f8e9ec] text-[#8f1d2c] flex items-center justify-center">
             <Eye className="w-4 h-4" />
@@ -208,9 +231,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
           <div>
             <span className="text-xs text-slate-500 font-medium">Lần đồng bộ gần nhất</span>
             <div className="text-xl font-bold text-[var(--ussh-blue-dark)] mt-1">
-              {loading ? '...' : stats?.lastUpdatedText}
+              {loading ? 'Đang tải...' : loadError ? 'Không thể tải dữ liệu' : (stats?.lastUpdatedText || 'Chưa có thông tin đồng bộ')}
             </div>
-            <span className="text-[10px] text-[var(--ussh-blue-dark)] font-medium">Đã xác thực dữ liệu · Xem điểm chuẩn</span>
+            <span className="text-[10px] text-[var(--ussh-blue-dark)] font-medium">Cập nhật từ dữ liệu admission_scores</span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center">
             <Clock className="w-4 h-4" />

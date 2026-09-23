@@ -26,6 +26,14 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 
 const LOCAL_STORAGE_KEY = 'ussh_admin_auth_session';
 
+const normalizeAdminRole = (role: unknown): AdminRole => {
+  const normalizedRole = String(role || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+
+  if (normalizedRole === 'superadmin' || normalizedRole === 'super_admin') return 'superadmin';
+  if (normalizedRole === 'admin') return 'admin';
+  return 'editor';
+};
+
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [adminUser, setAdminUser] = useState<AdminMemberDoc | null>(null);
   const [adminRole, setRole] = useState<AdminRole>('superadmin');
@@ -43,8 +51,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (cached) {
           const parsed = JSON.parse(cached) as AdminMemberDoc;
           if (parsed && parsed.email) {
-            setAdminUser(parsed);
-            setRole(parsed.role || 'superadmin');
+            const normalizedRole = normalizeAdminRole(parsed.role);
+            const normalizedMember = { ...parsed, role: normalizedRole };
+            setAdminUser(normalizedMember);
+            setRole(normalizedRole);
           }
         }
       } catch (err) {
@@ -58,9 +68,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (fbUser && fbUser.email) {
               const member = await findAdminMemberByEmail(fbUser.email);
               if (member && member.status === 'active') {
-                setAdminUser(member);
-                setRole(member.role);
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(member));
+                const normalizedRole = normalizeAdminRole(member.role);
+                const normalizedMember = { ...member, role: normalizedRole };
+                setAdminUser(normalizedMember);
+                setRole(normalizedRole);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedMember));
               } else if (member && member.status === 'inactive') {
                 setError('Tài khoản quản trị viên này đã bị vô hiệu hóa.');
                 setAdminUser(null);
@@ -76,6 +88,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   created_at: new Date().toISOString(),
                 });
               }
+            } else {
+              setAdminUser(null);
+              setRole('editor');
+              localStorage.removeItem(LOCAL_STORAGE_KEY);
             }
             setLoading(false);
           });
@@ -144,16 +160,18 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       // Success
-      setAdminUser(member);
-      setRole(member.role);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(member));
+      const normalizedRole = normalizeAdminRole(member.role);
+      const normalizedMember = { ...member, role: normalizedRole };
+      setAdminUser(normalizedMember);
+      setRole(normalizedRole);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedMember));
 
       await createAuditLog({
-        admin_email: member.email,
+        admin_email: normalizedMember.email,
         action: 'LOGIN',
         collection_name: 'admins',
-        document_id: member.id,
-        details: `Cán bộ ${member.name} (${member.email}) đăng nhập quản trị thành công với vai trò ${member.role}.`,
+        document_id: normalizedMember.id,
+        details: `Đăng nhập quản trị thành công với vai trò ${normalizedRole}.`,
         status: 'SUCCESS',
       });
 
@@ -182,7 +200,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           action: 'LOGIN',
           collection_name: 'admins',
           document_id: adminUser.id,
-          details: `Cán bộ ${adminUser.email} đăng xuất khỏi hệ thống quản trị.`,
+          details: 'Đăng xuất khỏi hệ thống quản trị.',
           status: 'SUCCESS',
         });
       } catch (e) {

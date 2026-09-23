@@ -99,7 +99,7 @@ export const AdminLoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Email cán bộ quản trị
+              Email đăng nhập
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -108,7 +108,7 @@ export const AdminLoginPage: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ten.canbo@vnuhcm.edu.vn"
+                placeholder="Nhập email của bạn"
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:border-[var(--ussh-blue)] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
               />
             </div>

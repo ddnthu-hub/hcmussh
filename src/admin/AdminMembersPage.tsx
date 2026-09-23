@@ -30,6 +30,10 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const isSuperadmin = currentAdminRole === 'superadmin';
+  const isProtectedSuperadmin = (member: Partial<AdminMemberDoc>) => {
+    const role = String(member.role || '').toLowerCase().replace(/[-\s]+/g, '_');
+    return role === 'superadmin' || role === 'super_admin';
+  };
 
   const loadMembers = async () => {
     setLoading(true);
@@ -56,6 +60,22 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
       return;
     }
 
+    if (isProtectedSuperadmin(editingMember)) {
+      const originalMember = members.find((member) => member.id === editingMember.id);
+      if (
+        !originalMember
+        || editingMember.email.trim().toLowerCase() !== originalMember.email.trim().toLowerCase()
+        || editingMember.role !== originalMember.role
+        || editingMember.status !== originalMember.status
+      ) {
+        alert('Không được đổi email, role hoặc trạng thái của Super Admin duy nhất.');
+        return;
+      }
+    } else if (String(editingMember.role || '').toLowerCase().replace(/[-\s]+/g, '_') === 'super_admin') {
+      alert('Không thể tạo hoặc cấp role Super Admin cho tài khoản khác.');
+      return;
+    }
+
     try {
       await saveAdminMember(editingMember, currentAdminEmail);
       setEditingMember(null);
@@ -71,6 +91,11 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
       alert('Chỉ Superadmin mới có quyền xóa tài khoản quản trị.');
       return;
     }
+    const target = members.find((member) => member.id === id);
+    if (target && isProtectedSuperadmin(target)) {
+      alert('Không thể xóa hoặc hạ quyền Super Admin duy nhất.');
+      return;
+    }
     try {
       await deleteAdminMember(id, currentAdminEmail);
       setDeleteConfirmId(null);
@@ -84,7 +109,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
   const getRoleBadge = (role: AdminRole) => {
     switch (role) {
       case 'superadmin':
-        return <span className="px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-900 border border-purple-200 text-[10px] font-bold uppercase">Superadmin</span>;
+        return <span className="px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-900 border border-purple-200 text-[10px] font-bold uppercase">Super Admin</span>;
       case 'admin':
         return <span className="px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-900 border border-blue-200 text-[10px] font-bold uppercase">Admin</span>;
       case 'editor':
@@ -95,7 +120,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center space-x-2 text-xs text-slate-500 mb-1">
             <Users className="w-4 h-4 text-blue-700" />
@@ -109,7 +134,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+        <div className="flex items-center space-x-2 self-start xl:self-auto">
           <button
             onClick={loadMembers}
             className="p-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-600 transition-colors"
@@ -169,23 +194,23 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
       {/* Members Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full min-w-[760px] text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#f4f7fb] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                <th className="py-3.5 px-4">HỌ TÊN CÁN BỘ</th>
-                <th className="py-3.5 px-4">EMAIL TÀI KHOẢN</th>
-                <th className="py-3.5 px-4 text-center">VAI TRÒ</th>
-                <th className="py-3.5 px-4 text-center">TRẠNG THÁI</th>
-                <th className="py-3.5 px-4">NGÀY TẠO</th>
-                <th className="py-3.5 px-4 text-center w-24">THAO TÁC</th>
+                <th className="min-w-40 py-3.5 px-4">HỌ TÊN CÁN BỘ</th>
+                <th className="min-w-60 py-3.5 px-4">EMAIL TÀI KHOẢN</th>
+                <th className="min-w-28 py-3.5 px-4 text-center">VAI TRÒ</th>
+                <th className="min-w-36 py-3.5 px-4 text-center">TRẠNG THÁI</th>
+                <th className="min-w-32 py-3.5 px-4">NGÀY CẬP NHẬT</th>
+                <th className="sticky right-0 z-10 py-3.5 px-4 text-center w-36 min-w-36 bg-[#f4f7fb]">THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {members.map((member) => (
                 <tr key={member.id} className="hover:bg-slate-50">
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{member.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-slate-700">{member.email}</td>
-                  <td className="py-3.5 px-4 text-center">{getRoleBadge(member.role)}</td>
+                  <td className="min-w-40 whitespace-nowrap py-3.5 px-4 font-bold text-slate-900">{member.name}</td>
+                  <td className="min-w-60 whitespace-nowrap py-3.5 px-4 font-mono text-slate-700">{member.email}</td>
+                  <td className="py-3.5 px-4 text-center">{getRoleBadge(String(member.role).toLowerCase().replace(/[-\s]+/g, '_') === 'super_admin' ? 'superadmin' : member.role)}</td>
                   <td className="py-3.5 px-4 text-center">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       member.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
@@ -196,23 +221,25 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   <td className="py-3.5 px-4 text-slate-500 text-[11px]">
                     {new Date(member.created_at).toLocaleDateString('vi-VN')}
                   </td>
-                  <td className="py-3.5 px-4 text-center">
+                  <td className="sticky right-0 z-[1] py-3.5 px-4 text-center bg-white group-hover:bg-slate-50">
                     {isSuperadmin ? (
-                      <div className="flex items-center justify-center space-x-1.5">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button
                           onClick={() => setEditingMember({ ...member })}
-                          className="p-1 text-slate-500 hover:text-blue-700"
+                          className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-50"
                           title="Sửa thông tin"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
+                          <span>Sửa</span>
                         </button>
-                        {member.email !== currentAdminEmail && (
+                        {member.email !== currentAdminEmail && !isProtectedSuperadmin(member) && (
                           <button
                             onClick={() => setDeleteConfirmId(member.id)}
-                            className="p-1 text-slate-400 hover:text-rose-600"
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold text-rose-600 hover:bg-rose-50"
                             title="Xóa tài khoản"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
+                            <span>Xóa</span>
                           </button>
                         )}
                       </div>
@@ -272,10 +299,10 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                     value={editingMember.role || 'editor'}
                     onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value as AdminRole })}
                     className="w-full p-2.5 rounded-lg border border-slate-300 bg-white font-semibold"
+                    disabled={isProtectedSuperadmin(editingMember)}
                   >
                     <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
-                    <option value="superadmin">Superadmin</option>
                   </select>
                 </div>
                 <div>
@@ -284,6 +311,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                     value={editingMember.status || 'active'}
                     onChange={(e) => setEditingMember({ ...editingMember, status: e.target.value as 'active' | 'inactive' })}
                     className="w-full p-2.5 rounded-lg border border-slate-300 bg-white"
+                    disabled={isProtectedSuperadmin(editingMember)}
                   >
                     <option value="active">Đang hoạt động</option>
                     <option value="inactive">Tạm dừng</option>
@@ -303,7 +331,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-[var(--ussh-blue)] text-white font-bold"
                 >
-                  Lưu tài khoản
+                  Lưu
                 </button>
               </div>
             </form>

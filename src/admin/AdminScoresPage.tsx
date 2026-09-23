@@ -300,7 +300,7 @@ export const AdminScoresPage: React.FC<AdminScoresPageProps> = ({
                   <td className="py-3 px-3.5 font-bold text-slate-900">{item.ten_nganh}</td>
                   <td className="py-3 px-3.5 text-slate-600">
                     <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] border border-slate-200">
-                      {item.he_dao_tao}
+                      {formatTrainingType(item.he_dao_tao)}
                     </span>
                   </td>
                   <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-800">{item.to_hop}</td>

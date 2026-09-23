@@ -9,34 +9,17 @@ import {
   Layers, 
   CheckCircle2, 
   AlertCircle,
-  Sliders,
   Server,
   Cloud
 } from 'lucide-react';
 
 export const AdminSettingsPage: React.FC = () => {
   const [firestoreStatus, setFirestoreStatus] = useState<FirestoreStatusInfo>(getFirestoreConnectionInfo());
-  const [alphaConfig, setAlphaConfig] = useState({
-    alpha_thpt: 0.75,
-    alpha_dgnl: 0.25,
-    year_weight_2026: 0.50,
-    year_weight_2025: 0.30,
-    year_weight_2024: 0.20,
-    active_admission_year: 2026,
-  });
-
-  const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeFirestoreStatus((st) => setFirestoreStatus(st));
     return () => unsub();
   }, []);
-
-  const handleSaveParams = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedNotice(true);
-    setTimeout(() => setSavedNotice(false), 2500);
-  };
 
   return (
     <div className="space-y-6">
@@ -54,7 +37,7 @@ export const AdminSettingsPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Left Column: System & Infrastructure Status */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4 text-xs">
@@ -143,105 +126,6 @@ export const AdminSettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Model Parameters (admission_alpha_config) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4 text-xs">
-          <div className="border-b border-slate-100 pb-3">
-            <h2 className="font-bold text-sm text-[var(--ussh-blue-dark)] flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-indigo-600" />
-              Tham số mô hình thuật toán dự đoán (admission_alpha_config)
-            </h2>
-            <p className="text-slate-500 text-[11px] mt-0.5">
-              Cấu hình trọng số và hệ số dự báo xác suất trúng tuyển dành cho thí sinh
-            </p>
-          </div>
-
-          <form onSubmit={handleSaveParams} className="space-y-3">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Năm tuyển sinh áp dụng chính thức</label>
-              <input
-                type="number"
-                value={alphaConfig.active_admission_year}
-                onChange={(e) => setAlphaConfig({ ...alphaConfig, active_admission_year: Number(e.target.value) })}
-                className="w-full p-2.5 rounded-lg border border-slate-300"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Trọng số THPT (Alpha)</label>
-                <input
-                  type="number"
-                  step="0.05"
-                  value={alphaConfig.alpha_thpt}
-                  onChange={(e) => setAlphaConfig({ ...alphaConfig, alpha_thpt: parseFloat(e.target.value) })}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Trọng số ĐGNL (Alpha)</label>
-                <input
-                  type="number"
-                  step="0.05"
-                  value={alphaConfig.alpha_dgnl}
-                  onChange={(e) => setAlphaConfig({ ...alphaConfig, alpha_dgnl: parseFloat(e.target.value) })}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <label className="block font-bold text-slate-700 mb-1">Phân bổ trọng số lịch sử các năm gần nhất</label>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <span className="text-[10px] text-slate-500">Năm 2026:</span>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={alphaConfig.year_weight_2026}
-                    onChange={(e) => setAlphaConfig({ ...alphaConfig, year_weight_2026: parseFloat(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-300 font-mono text-center"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500">Năm 2025:</span>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={alphaConfig.year_weight_2025}
-                    onChange={(e) => setAlphaConfig({ ...alphaConfig, year_weight_2025: parseFloat(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-300 font-mono text-center"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500">Năm 2024:</span>
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={alphaConfig.year_weight_2024}
-                    onChange={(e) => setAlphaConfig({ ...alphaConfig, year_weight_2024: parseFloat(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-300 font-mono text-center"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {savedNotice && (
-              <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-800 text-[11px] font-semibold flex items-center space-x-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Đã lưu cập nhật cấu hình tham số mô hình dự báo thành công!</span>
-              </div>
-            )}
-
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[var(--ussh-blue)] hover:bg-[var(--ussh-blue-dark)] text-white font-bold cursor-pointer transition-colors shadow-2xs"
-              >
-                Cập nhật cấu hình tham số
-              </button>
-            </div>
-          </form>
-        </div>
       </div>
     </div>
   );
