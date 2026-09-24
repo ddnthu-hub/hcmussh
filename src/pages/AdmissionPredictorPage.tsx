@@ -1062,7 +1062,7 @@ export const AdmissionPredictorPage: React.FC<AdmissionPredictorPageProps> = ({
         <div>
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[var(--ussh-blue)]/10 text-[var(--ussh-blue-dark)] text-xs font-bold mb-2">
             <Calculator className="w-3.5 h-3.5 text-[var(--ussh-blue-dark)]" />
-            <span>Dự đoán tuyển sinh 2027 (Thang 100 điểm)</span>
+            <span>Dự đoán trúng tuyển 2027 (Thang 100 điểm)</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
             Dự đoán trúng tuyển

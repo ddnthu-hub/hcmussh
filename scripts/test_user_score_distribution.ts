@@ -35,6 +35,14 @@ assert.deepEqual(scores([
   record('A', 90, '2026-01-01T11:00:00Z', 'fake'),
 ]), [77]);
 
+// A selected FAKE score is an overlay only; the device's REAL score remains community data.
+const realThenFake = [
+  record('A', 75, '2026-01-01T10:00:00Z'),
+  record('A', 82, '2026-01-01T11:00:00Z', 'fake'),
+];
+assert.deepEqual(scores(realThenFake), [75]);
+assert.equal(realThenFake.find((item) => item.scoreType === 'fake')?.userAdmissionScore, 82);
+
 assert.deepEqual(scores([
   record('A', 90, '2026-01-01T10:00:00Z', 'fake'),
   record('A', 78, '2026-01-01T11:00:00Z'),

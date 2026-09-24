@@ -53,7 +53,7 @@ export const AdminLoginPage: React.FC = () => {
       <div className="max-w-md w-full mx-auto my-8 bg-white text-slate-900 rounded-3xl shadow-[0_18px_45px_rgba(15,43,92,0.12)] p-6 sm:p-8 border border-[#e5edf7]">
         {/* Header Branding */}
         <div className="text-center space-y-3 pb-6 border-b border-slate-100">
-          <div className="inline-flex p-3 rounded-2xl bg-blue-50 border border-blue-100 shadow-xs">
+          <div className="inline-flex p-3 rounded-2xl bg-white border border-blue-100 shadow-xs">
             <div className="flex items-center gap-2">
               <img src="/logo-dhqg.jpg" alt="Logo ĐHQG" className="h-8 w-auto rounded-sm" />
               <img src="/logo_ussh.png" alt="Logo USSH" className="h-8 w-auto" />

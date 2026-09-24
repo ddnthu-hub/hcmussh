@@ -93,7 +93,7 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
         <div>
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[var(--ussh-blue)]/10 text-[var(--ussh-blue-dark)] text-xs font-bold mb-2">
             <BookOpen className="w-3.5 h-3.5 text-[var(--ussh-blue-dark)]" />
-            <span>Cẩm nang của hệ thống 2026</span>
+            <span>Cẩm nang của hệ thống 2027</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
             Thông tin & Hướng dẫn
@@ -366,7 +366,7 @@ export const AdmissionGuidePage: React.FC<AdmissionGuidePageProps> = ({ onSelect
 
       </details>
 
-      <details className="group scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
+      <details id="guide-calculation" className="group scroll-mt-24 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-slate-100 pb-3 text-[#0f2b5c] [&::-webkit-details-marker]:hidden">
           <h2 className="text-lg sm:text-xl font-bold">Cách tính mức độ phù hợp và xác suất của hệ thống</h2>
           <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" />

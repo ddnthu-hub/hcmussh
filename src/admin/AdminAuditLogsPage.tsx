@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getAdminMembers, getAuditLogs } from '../lib/firebase';
 import { AdminMemberDoc, AuditLogDoc } from '../types';
+import { Pagination } from '../components/Pagination';
 import { 
   History, 
   Search, 
-  Filter, 
   CheckCircle2, 
   XCircle, 
   Calendar, 
-  User, 
-  FileText,
   RefreshCw 
 } from 'lucide-react';
 
@@ -19,6 +17,10 @@ export const AdminAuditLogsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAction, setSelectedAction] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 12;
 
   const loadLogs = async () => {
     setLoading(true);
@@ -46,9 +48,28 @@ export const AdminAuditLogsPage: React.FC = () => {
         (log.document_id && log.document_id.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchAction = selectedAction === 'all' || log.action === selectedAction;
-      return matchSearch && matchAction;
+
+      const logDate = new Date(log.timestamp).getTime();
+      const startOfDay = (value: string) => new Date(`${value}T00:00:00`).getTime();
+      const endOfDay = (value: string) => new Date(`${value}T23:59:59.999`).getTime();
+
+      const matchDateFrom = !dateFrom || logDate >= startOfDay(dateFrom);
+      const matchDateTo = !dateTo || logDate <= endOfDay(dateTo);
+
+      return matchSearch && matchAction && matchDateFrom && matchDateTo;
     });
-  }, [logs, searchTerm, selectedAction]);
+  }, [logs, searchTerm, selectedAction, dateFrom, dateTo]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedAction, dateFrom, dateTo]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedLogs = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * rowsPerPage;
+    return filteredLogs.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredLogs, safeCurrentPage]);
 
   const getActionBadge = (action: AuditLogDoc['action']) => {
     switch (action) {
@@ -106,32 +127,73 @@ export const AdminAuditLogsPage: React.FC = () => {
       </div>
 
       {/* Filter & Search */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo email hoặc chi tiết thao tác..."
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none"
-          />
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col gap-3">
+        <div className="flex flex-col lg:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm theo email hoặc chi tiết thao tác..."
+              className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none"
+            />
+          </div>
+
+          <div className="w-full lg:w-56">
+            <select
+              value={selectedAction}
+              onChange={(e) => setSelectedAction(e.target.value)}
+              className="w-full py-2 px-3 text-xs rounded-xl border border-slate-300 bg-white"
+            >
+              <option value="all">Tất cả hành động</option>
+              <option value="CREATE">Tạo mới (CREATE)</option>
+              <option value="UPDATE">Cập nhật (UPDATE)</option>
+              <option value="DELETE">Xóa (DELETE)</option>
+              <option value="IMPORT">Nhập dữ liệu (IMPORT)</option>
+              <option value="LOGIN">Đăng nhập (LOGIN)</option>
+              <option value="ROLE_CHANGE">Đổi quyền (ROLE_CHANGE)</option>
+            </select>
+          </div>
         </div>
 
-        <div className="w-full sm:w-56">
-          <select
-            value={selectedAction}
-            onChange={(e) => setSelectedAction(e.target.value)}
-            className="w-full py-2 px-3 text-xs rounded-xl border border-slate-300 bg-white"
-          >
-            <option value="all">Tất cả hành động</option>
-            <option value="CREATE">Tạo mới (CREATE)</option>
-            <option value="UPDATE">Cập nhật (UPDATE)</option>
-            <option value="DELETE">Xóa (DELETE)</option>
-            <option value="IMPORT">Nhập dữ liệu (IMPORT)</option>
-            <option value="LOGIN">Đăng nhập (LOGIN)</option>
-            <option value="ROLE_CHANGE">Đổi quyền (ROLE_CHANGE)</option>
-          </select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <label className="flex-1 flex items-center gap-2 text-[11px] text-slate-600">
+            <Calendar className="w-3.5 h-3.5 text-slate-500" />
+            <span className="min-w-[52px]">Từ ngày</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full py-2 px-2.5 rounded-xl border border-slate-300 bg-white"
+            />
+          </label>
+
+          <label className="flex-1 flex items-center gap-2 text-[11px] text-slate-600">
+            <Calendar className="w-3.5 h-3.5 text-slate-500" />
+            <span className="min-w-[58px]">Đến ngày</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full py-2 px-2.5 rounded-xl border border-slate-300 bg-white"
+            />
+          </label>
+
+          {(dateFrom || dateTo || searchTerm || selectedAction !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedAction('all');
+                setDateFrom('');
+                setDateTo('');
+              }}
+              className="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 text-[11px] font-semibold hover:bg-slate-50"
+            >
+              Xóa lọc
+            </button>
+          )}
         </div>
       </div>
 
@@ -149,7 +211,7 @@ export const AdminAuditLogsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredLogs.map((log) => (
+              {paginatedLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
                     {new Date(log.timestamp).toLocaleString('vi-VN')}
@@ -172,7 +234,7 @@ export const AdminAuditLogsPage: React.FC = () => {
                 </tr>
               ))}
 
-              {filteredLogs.length === 0 && (
+              {paginatedLogs.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">
                     {loading ? 'Đang tải nhật ký...' : 'Chưa có nhật ký hoạt động nào'}
@@ -183,6 +245,15 @@ export const AdminAuditLogsPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={safeCurrentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalRecords={filteredLogs.length}
+        startIndex={(safeCurrentPage - 1) * rowsPerPage}
+        endIndex={Math.min(safeCurrentPage * rowsPerPage, filteredLogs.length)}
+      />
     </div>
   );
 };

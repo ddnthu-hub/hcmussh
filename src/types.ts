@@ -243,6 +243,7 @@ export type AdminRole = 'superadmin' | 'admin' | 'editor';
 
 export interface AdminMemberDoc {
   id: string;
+  uid?: string;
   email: string;
   name: string;
   role: AdminRole;

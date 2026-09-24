@@ -86,6 +86,15 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
                   <span>Dữ liệu hệ thống sử dụng</span>
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => onSelectTab('/cam-nang#guide-calculation')}
+                  className="font-semibold hover:text-[#ffd21a] hover:underline text-white transition-colors flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <ArrowRight className="w-3 h-3 text-rose-300" />
+                  <span>Cách tính mức độ phù hợp và xác suất</span>
+                </button>
+              </li>
             </ul>
           </div>
 

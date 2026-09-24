@@ -6,7 +6,8 @@ import {
   MajorFitResult, 
   CriterionComparison,
   OrientationHistoryItem,
-  Major 
+  Major,
+  OrientationOption
 } from '../types';
 import { DETAILED_SCORE_RECORDS, MAJORS_DATA } from './admissionData';
 
@@ -80,13 +81,11 @@ export const CRITERIA_METADATA: Record<CriteriaKey, { name: string; description:
 
 /**
  * ============================================================================
- * BỘ 15 CÂU HỎI KHẢO SÁT ĐỊNH HƯỚNG
- * Giữ nguyên các câu hỏi 1-4 hiện có, bổ sung câu 6 theo đúng mẫu yêu cầu,
- * và hoàn thiện đủ 15 câu phủ khắp 9 tiêu chí.
- * Thang điểm cho từng đáp án: 0 đến 5.
+ * Bộ câu hỏi cũ được giữ lại để dữ liệu khảo sát đã lưu trong localStorage
+ * không bị mất tham chiếu khi người dùng mở lại lịch sử.
  * ============================================================================
  */
-export const ORIENTATION_QUESTIONS: OrientationQuestion[] = [
+const LEGACY_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
   {
     id: 1,
     weight: 1,
@@ -673,6 +672,477 @@ export const ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     ],
   },
 ];
+
+const orientationProfile = (values: Partial<CriteriaProfile>): CriteriaProfile => ({
+  analysis: 0,
+  communication: 0,
+  socialHuman: 0,
+  language: 0,
+  creativity: 0,
+  organization: 0,
+  research: 0,
+  international: 0,
+  technologyData: 0,
+  ...values,
+});
+
+/** Câu hỏi ngắn, dựa trên hành vi và sở thích để học sinh trả lời tự nhiên. */
+const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
+  {
+    id: 1,
+    weight: 1,
+    text: 'Khi có thời gian rảnh, bạn thường muốn làm gì nhất?',
+    maxSelect: 2,
+    hint: 'Chọn tối đa 2 hoạt động gần với bạn nhất',
+    options: [
+      { id: 'q1_opt1', label: 'Viết, quay hoặc làm một nội dung để chia sẻ với mọi người', profile: orientationProfile({ communication: 4, creativity: 5, technologyData: 3, language: 2 }) },
+      { id: 'q1_opt2', label: 'Đọc, xem và tìm hiểu vì sao một vấn đề xảy ra', profile: orientationProfile({ analysis: 4, research: 5, socialHuman: 3 }) },
+      { id: 'q1_opt3', label: 'Trò chuyện, lắng nghe hoặc giúp ai đó gỡ rối', profile: orientationProfile({ communication: 4, socialHuman: 5, organization: 2 }) },
+      { id: 'q1_opt4', label: 'Tổ chức một chuyến đi hoặc hoạt động cho bạn bè', profile: orientationProfile({ organization: 5, communication: 4, socialHuman: 3 }) },
+      { id: 'q1_opt5', label: 'Học thêm một ngôn ngữ và tìm hiểu cuộc sống ở nơi khác', profile: orientationProfile({ language: 5, international: 5, research: 3 }) },
+      { id: 'q1_opt6', label: 'Dùng công cụ số để sắp xếp hoặc khám phá thông tin', profile: orientationProfile({ technologyData: 5, analysis: 4, creativity: 3 }) },
+    ],
+  },
+  {
+    id: 2,
+    weight: 1,
+    text: 'Khi làm bài tập nhóm, bạn thường thích nhận phần nào?',
+    maxSelect: 1,
+    hint: 'Chọn 1 vai trò bạn thấy tự nhiên nhất',
+    options: [
+      { id: 'q2_opt1', label: 'Nghĩ ý tưởng và trình bày cho cả nhóm', profile: orientationProfile({ communication: 5, creativity: 4, language: 3 }) },
+      { id: 'q2_opt2', label: 'Tìm thông tin, so sánh các nguồn và rút ra ý chính', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 3 }) },
+      { id: 'q2_opt3', label: 'Chia việc, theo dõi tiến độ và kết nối các thành viên', profile: orientationProfile({ organization: 5, communication: 3, socialHuman: 3 }) },
+      { id: 'q2_opt4', label: 'Tìm ví dụ, số liệu hoặc tài liệu để cả nhóm sử dụng', profile: orientationProfile({ research: 5, analysis: 4, technologyData: 3 }) },
+      { id: 'q2_opt5', label: 'Thiết kế hình ảnh, slide hoặc cách trình bày sinh động', profile: orientationProfile({ creativity: 5, technologyData: 4, communication: 3 }) },
+      { id: 'q2_opt6', label: 'Đặt câu hỏi và giúp nhóm nhìn vấn đề từ nhiều phía', profile: orientationProfile({ analysis: 4, socialHuman: 4, research: 4 }) },
+    ],
+  },
+  {
+    id: 3,
+    weight: 1,
+    text: 'Khi gặp một chủ đề mình chưa biết, bạn thường bắt đầu bằng cách nào?',
+    maxSelect: 2,
+    hint: 'Chọn tối đa 2 cách bạn hay làm nhất',
+    options: [
+      { id: 'q3_opt1', label: 'Tự tìm tài liệu rồi đọc để hiểu từ đầu đến cuối', profile: orientationProfile({ research: 5, analysis: 4, language: 2 }) },
+      { id: 'q3_opt2', label: 'Hỏi người khác và trao đổi để nhìn vấn đề rõ hơn', profile: orientationProfile({ communication: 5, socialHuman: 4, international: 2 }) },
+      { id: 'q3_opt3', label: 'Thử một công cụ hoặc cách làm mới để tìm câu trả lời', profile: orientationProfile({ creativity: 4, technologyData: 5, analysis: 3 }) },
+      { id: 'q3_opt4', label: 'Tìm người có trải nghiệm gần với vấn đề đó để hỏi thêm', profile: orientationProfile({ communication: 4, socialHuman: 4, organization: 2 }) },
+      { id: 'q3_opt5', label: 'So sánh nhiều cách giải thích trước khi chọn một cách hiểu', profile: orientationProfile({ analysis: 5, research: 4, international: 2 }) },
+    ],
+  },
+  {
+    id: 4,
+    weight: 1,
+    text: 'Bạn thường chú ý đến loại nội dung nào hơn?',
+    maxSelect: 3,
+    hint: 'Chọn tối đa 3 chủ đề bạn hay quan tâm',
+    options: [
+      { id: 'q4_opt1', label: 'Câu chuyện về con người, trường học và đời sống xã hội', profile: orientationProfile({ socialHuman: 5, communication: 3, research: 3 }) },
+      { id: 'q4_opt2', label: 'Lịch sử, văn hóa, sách và những câu chuyện của các vùng đất', profile: orientationProfile({ research: 5, language: 4, socialHuman: 3 }) },
+      { id: 'q4_opt3', label: 'Ngôn ngữ, đất nước và cách mọi người ở nơi khác sống và giao tiếp', profile: orientationProfile({ language: 5, international: 5, communication: 3 }) },
+      { id: 'q4_opt4', label: 'Tin tức, truyền thông và cách một câu chuyện lan đến nhiều người', profile: orientationProfile({ communication: 5, creativity: 4, technologyData: 3 }) },
+      { id: 'q4_opt5', label: 'Cách dữ liệu, công nghệ hoặc mạng xã hội đang thay đổi cuộc sống', profile: orientationProfile({ technologyData: 5, analysis: 4, research: 3 }) },
+      { id: 'q4_opt6', label: 'Những nơi mới, trải nghiệm văn hóa và cách tổ chức một chuyến đi', profile: orientationProfile({ organization: 4, international: 4, communication: 4 }) },
+    ],
+  },
+  {
+    id: 5,
+    weight: 1,
+    text: 'Bạn thấy mình mạnh hơn ở điểm nào?',
+    maxSelect: 1,
+    hint: 'Chọn 1 điểm bạn tự tin nhất',
+    options: [
+      { id: 'q5_opt1', label: 'Viết hoặc nói sao cho người khác dễ hiểu', profile: orientationProfile({ communication: 5, language: 4, creativity: 3 }) },
+      { id: 'q5_opt2', label: 'Tìm quy luật, phân tích thông tin và đặt câu hỏi', profile: orientationProfile({ analysis: 5, research: 4, technologyData: 3 }) },
+      { id: 'q5_opt3', label: 'Sắp xếp công việc và xử lý tình huống phát sinh', profile: orientationProfile({ organization: 5, communication: 3, socialHuman: 3 }) },
+      { id: 'q5_opt4', label: 'Lắng nghe để hiểu cảm xúc và nhu cầu của người khác', profile: orientationProfile({ socialHuman: 5, communication: 4, research: 3 }) },
+    ],
+  },
+  {
+    id: 6,
+    weight: 1,
+    text: 'Nếu được giao chuẩn bị một hoạt động ở trường, bạn muốn làm phần nào nhất?',
+    maxSelect: 2,
+    hint: 'Chọn tối đa 2 phần việc khiến bạn thấy hứng thú',
+    options: [
+      { id: 'q6_opt1', label: 'Lên ý tưởng, viết nội dung hoặc kể câu chuyện của hoạt động', profile: orientationProfile({ communication: 4, creativity: 5, language: 3 }) },
+      { id: 'q6_opt2', label: 'Lập kế hoạch, chuẩn bị nhân sự và sắp xếp từng việc', profile: orientationProfile({ organization: 5, analysis: 3, communication: 3 }) },
+      { id: 'q6_opt3', label: 'Giới thiệu hoạt động và kết nối những người tham gia', profile: orientationProfile({ communication: 5, socialHuman: 4, international: 2 }) },
+      { id: 'q6_opt4', label: 'Tìm hiểu người tham gia cần gì và điều chỉnh hoạt động', profile: orientationProfile({ socialHuman: 5, analysis: 3, research: 3 }) },
+      { id: 'q6_opt5', label: 'Dùng hình ảnh, video hoặc công cụ số để quảng bá', profile: orientationProfile({ creativity: 5, technologyData: 5, communication: 3 }) },
+    ],
+  },
+  {
+    id: 7,
+    weight: 1,
+    text: 'Khi đọc một bài viết có nhiều ý kiến khác nhau, bạn muốn làm gì?',
+    maxSelect: 2,
+    hint: 'Chọn tối đa 2 phản xạ gần với bạn nhất',
+    options: [
+      { id: 'q7_opt1', label: 'Tìm nguồn khác để kiểm tra thông tin', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 2 }) },
+      { id: 'q7_opt2', label: 'Đặt mình vào vị trí của từng người để hiểu họ', profile: orientationProfile({ socialHuman: 5, communication: 4, international: 2 }) },
+      { id: 'q7_opt3', label: 'Nhìn lại bối cảnh và cách người viết kể câu chuyện', profile: orientationProfile({ research: 4, language: 4, creativity: 3 }) },
+      { id: 'q7_opt4', label: 'Trao đổi với người khác để hiểu các góc nhìn khác nhau', profile: orientationProfile({ communication: 5, socialHuman: 4, international: 3 }) },
+    ],
+  },
+  {
+    id: 8,
+    weight: 1,
+    text: 'Bạn thích học theo cách nào hơn?',
+    maxSelect: 1,
+    hint: 'Chọn 1 cách học phù hợp với bạn',
+    options: [
+      { id: 'q8_opt1', label: 'Tự đọc, tự tìm ví dụ và làm theo cách của mình', profile: orientationProfile({ research: 4, analysis: 4, creativity: 3 }) },
+      { id: 'q8_opt2', label: 'Trao đổi với bạn bè rồi cùng phát triển ý tưởng', profile: orientationProfile({ communication: 5, socialHuman: 4, creativity: 3 }) },
+      { id: 'q8_opt3', label: 'Có kế hoạch rõ ràng và hoàn thành từng bước', profile: orientationProfile({ organization: 5, analysis: 3, research: 2 }) },
+    ],
+  },
+  {
+    id: 9,
+    weight: 1,
+    text: 'Hoạt động nào khiến bạn muốn tham gia lâu dài?',
+    maxSelect: 1,
+    hint: 'Chọn 1 hoạt động bạn thấy có ý nghĩa',
+    options: [
+      { id: 'q9_opt1', label: 'Làm nội dung, chụp ảnh, quay video hoặc kể chuyện', profile: orientationProfile({ creativity: 5, communication: 4, technologyData: 3 }) },
+      { id: 'q9_opt2', label: 'Tìm hiểu, lưu giữ hoặc giới thiệu văn hóa và lịch sử', profile: orientationProfile({ research: 5, language: 4, socialHuman: 3 }) },
+      { id: 'q9_opt3', label: 'Tổ chức hoạt động để hỗ trợ hoặc kết nối mọi người', profile: orientationProfile({ socialHuman: 5, organization: 5, communication: 4 }) },
+      { id: 'q9_opt4', label: 'Tìm hiểu một địa điểm, món ăn hoặc nét văn hóa mới', profile: orientationProfile({ international: 4, research: 4, communication: 3 }) },
+      { id: 'q9_opt5', label: 'Thử làm một sản phẩm số hoặc cách kể chuyện mới', profile: orientationProfile({ creativity: 5, technologyData: 4, communication: 3 }) },
+    ],
+  },
+  {
+    id: 10,
+    weight: 1,
+    text: 'Bạn muốn tạo ra sản phẩm nào sau một dự án?',
+    maxSelect: 1,
+    hint: 'Chọn 1 kết quả khiến bạn thấy vui nhất',
+    options: [
+      { id: 'q10_opt1', label: 'Một bài viết, video hoặc sản phẩm giúp nhiều người hiểu vấn đề hơn', profile: orientationProfile({ communication: 5, creativity: 5, socialHuman: 3 }) },
+      { id: 'q10_opt2', label: 'Một bản tổng hợp thông tin rõ ràng, có dẫn chứng', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 3 }) },
+      { id: 'q10_opt3', label: 'Một chương trình diễn ra trọn vẹn và có ích cho người tham gia', profile: orientationProfile({ organization: 5, communication: 4, socialHuman: 4 }) },
+    ],
+  },
+  {
+    id: 11,
+    weight: 1,
+    text: 'Khi làm việc với người đến từ nơi khác, điều gì làm bạn hứng thú?',
+    maxSelect: 1,
+    hint: 'Chọn 1 điều bạn muốn khám phá',
+    options: [
+      { id: 'q11_opt1', label: 'Học cách họ dùng ngôn ngữ và kể về văn hóa của họ', profile: orientationProfile({ language: 5, international: 5, communication: 3 }) },
+      { id: 'q11_opt2', label: 'Tìm hiểu cách các bên trao đổi và cùng giải quyết một việc', profile: orientationProfile({ international: 5, communication: 4, organization: 3, analysis: 3 }) },
+      { id: 'q11_opt3', label: 'So sánh những điểm giống và khác trong cách sống', profile: orientationProfile({ research: 4, socialHuman: 4, language: 3, international: 3 }) },
+    ],
+  },
+  {
+    id: 12,
+    weight: 1,
+    text: 'Trong một công việc mới, bạn muốn được rèn luyện điều gì nhất?',
+    maxSelect: 1,
+    hint: 'Chọn 1 kỹ năng bạn muốn phát triển',
+    options: [
+      { id: 'q12_opt1', label: 'Viết, nói và trình bày ý tưởng thuyết phục hơn', profile: orientationProfile({ communication: 5, language: 4, creativity: 3 }) },
+      { id: 'q12_opt2', label: 'Đọc hiểu, phân tích và tìm ra cách giải quyết vấn đề', profile: orientationProfile({ analysis: 5, research: 4, technologyData: 3 }) },
+      { id: 'q12_opt3', label: 'Làm việc với mọi người và tổ chức công việc hiệu quả', profile: orientationProfile({ socialHuman: 4, organization: 5, communication: 4 }) },
+    ],
+  },
+];
+
+const surveyQuestion = (
+  id: number,
+  text: string,
+  options: Array<[string, Partial<CriteriaProfile>]>,
+): OrientationQuestion => ({
+  id,
+  weight: 1,
+  text,
+  maxSelect: 1,
+  hint: 'Chọn 1 phương án gần với bạn nhất',
+  options: options.map(([label, profile], index) => ({
+    id: `q${id}_opt${index + 1}`,
+    label,
+    profile: orientationProfile(profile),
+  })),
+});
+
+/** Exact 27-question cross-criterion survey used by the orientation flow. */
+const ORIENTATION_QUESTION_BANK: OrientationQuestion[] = [
+  surveyQuestion(1, 'Khi gặp một vấn đề có nhiều nguyên nhân, bạn thường:', [
+    ['Chọn ngay cách giải quyết quen thuộc.', { analysis: 0.2, research: 0.1 }],
+    ['Tìm thêm thông tin trước khi quyết định.', { analysis: 0.45, research: 0.55, technologyData: 0.2 }],
+    ['Tách vấn đề thành từng phần để tìm nguyên nhân.', { analysis: 0.85, research: 0.5 }],
+    ['So sánh nhiều khả năng rồi xác định nguyên nhân có cơ sở nhất.', { analysis: 1, research: 0.8, technologyData: 0.3 }],
+  ]),
+  surveyQuestion(2, 'Khi một bảng số liệu có nhiều thông tin khác nhau, bạn thích:', [
+    ['Xem kết luận có sẵn.', { analysis: 0.15, research: 0.1 }],
+    ['Tìm những con số nổi bật.', { analysis: 0.4, technologyData: 0.35 }],
+    ['So sánh các nhóm số liệu.', { analysis: 0.7, technologyData: 0.6 }],
+    ['Tìm mối quan hệ và xu hướng giữa các dữ liệu.', { analysis: 1, technologyData: 1, research: 0.4 }],
+  ]),
+  surveyQuestion(3, 'Khi hai nguồn thông tin đưa ra kết luận khác nhau, bạn thường:', [
+    ['Tin nguồn mình quen thuộc hơn.', { analysis: 0.15, research: 0.1 }],
+    ['Chọn thông tin dễ hiểu hơn.', { analysis: 0.25, communication: 0.2 }],
+    ['Kiểm tra lại nguồn và bằng chứng.', { analysis: 0.75, research: 0.8 }],
+    ['Đối chiếu dữ liệu, phương pháp và lý do để xác định thông tin đáng tin hơn.', { analysis: 1, research: 1, technologyData: 0.35 }],
+  ]),
+  surveyQuestion(4, 'Khi phải trình bày một ý tưởng trước nhiều người, bạn thường:', [
+    ['Cảm thấy khá khó khăn.', { communication: 0.2, language: 0.2 }],
+    ['Có thể trình bày nếu chuẩn bị trước.', { communication: 0.5, language: 0.45, organization: 0.25 }],
+    ['Có thể trình bày và trả lời câu hỏi.', { communication: 0.8, language: 0.7, analysis: 0.25 }],
+    ['Thoải mái trình bày, thuyết phục và điều chỉnh cách nói theo người nghe.', { communication: 1, language: 1, socialHuman: 0.5 }],
+  ]),
+  surveyQuestion(5, 'Khi một người hiểu sai ý bạn, bạn thường:', [
+    ['Bỏ qua.', { communication: 0.15 }],
+    ['Giải thích lại ngắn gọn.', { communication: 0.45, language: 0.4 }],
+    ['Tìm cách diễn đạt dễ hiểu hơn.', { communication: 0.75, language: 0.75, socialHuman: 0.3 }],
+    ['Điều chỉnh cách diễn đạt dựa trên cách người đó đang hiểu vấn đề.', { communication: 1, language: 1, socialHuman: 0.8 }],
+  ]),
+  surveyQuestion(6, 'Trong một nhóm làm việc, bạn thường thích:', [
+    ['Làm phần việc của mình.', { organization: 0.3 }],
+    ['Trao đổi khi cần.', { communication: 0.45, organization: 0.35 }],
+    ['Chủ động thảo luận và chia sẻ ý kiến.', { communication: 0.75, creativity: 0.35 }],
+    ['Kết nối các thành viên và giúp nhóm thống nhất cách làm.', { communication: 1, organization: 0.8, socialHuman: 0.75 }],
+  ]),
+  surveyQuestion(7, 'Khi thấy một người trong nhóm ít nói và có vẻ không thoải mái, bạn thường:', [
+    ['Không để ý nếu họ không nói.', { socialHuman: 0.15 }],
+    ['Hỏi xem họ có vấn đề gì không.', { socialHuman: 0.5, communication: 0.45 }],
+    ['Tìm hiểu nguyên nhân khiến họ không thoải mái.', { socialHuman: 0.8, research: 0.35 }],
+    ['Chủ động tìm cách giúp họ cảm thấy được lắng nghe và hòa nhập.', { socialHuman: 1, communication: 0.8, organization: 0.35 }],
+  ]),
+  surveyQuestion(8, 'Khi tìm hiểu một vấn đề xã hội, điều khiến bạn quan tâm nhất là:', [
+    ['Vấn đề có ảnh hưởng đến mình hay không.', { socialHuman: 0.2 }],
+    ['Có bao nhiêu người bị ảnh hưởng.', { socialHuman: 0.5, analysis: 0.35 }],
+    ['Vì sao vấn đề đó xảy ra.', { socialHuman: 0.75, analysis: 0.65, research: 0.55 }],
+    ['Con người bị ảnh hưởng như thế nào và xã hội có thể giải quyết ra sao.', { socialHuman: 1, analysis: 0.75, organization: 0.45, research: 0.6 }],
+  ]),
+  surveyQuestion(9, 'Khi làm việc với người có quan điểm rất khác mình, bạn thường:', [
+    ['Giữ quan điểm của mình.', { socialHuman: 0.15, communication: 0.15 }],
+    ['Nghe họ giải thích.', { communication: 0.45, socialHuman: 0.4 }],
+    ['Cố gắng hiểu lý do họ suy nghĩ như vậy.', { communication: 0.7, socialHuman: 0.75 }],
+    ['Đặt mình vào hoàn cảnh của họ để hiểu cả quan điểm và cảm xúc của họ.', { communication: 0.9, socialHuman: 1, international: 0.35 }],
+  ]),
+  surveyQuestion(10, 'Khi đọc một bài viết có cách diễn đạt hay, bạn thường:', [
+    ['Chỉ quan tâm đến nội dung.', { language: 0.2 }],
+    ['Nhận ra một số cách dùng từ thú vị.', { language: 0.5, creativity: 0.3 }],
+    ['Chú ý đến cách tác giả lựa chọn và sắp xếp từ ngữ.', { language: 0.8, research: 0.3 }],
+    ['Thường phân tích sắc thái, hình ảnh và cách ngôn ngữ tạo ra ý nghĩa.', { language: 1, creativity: 0.7, research: 0.45 }],
+  ]),
+  surveyQuestion(11, 'Khi gặp một từ tiếng Anh hoặc ngôn ngữ khác chưa biết, bạn thường:', [
+    ['Bỏ qua.', { language: 0.15 }],
+    ['Tra nghĩa.', { language: 0.45 }],
+    ['Tìm thêm cách sử dụng trong câu.', { language: 0.75, research: 0.3 }],
+    ['So sánh cách dùng từ trong những ngữ cảnh và văn hóa khác nhau.', { language: 1, international: 0.8, research: 0.5 }],
+  ]),
+  surveyQuestion(12, 'Nếu phải chuyển một đoạn văn từ ngôn ngữ này sang ngôn ngữ khác, bạn quan tâm nhất đến:', [
+    ['Dịch đúng từng từ.', { language: 0.3 }],
+    ['Dịch đúng nội dung.', { language: 0.55 }],
+    ['Dùng cách diễn đạt tự nhiên.', { language: 0.8, communication: 0.35 }],
+    ['Giữ được cả ý nghĩa, sắc thái và bối cảnh văn hóa của bản gốc.', { language: 1, international: 0.8, socialHuman: 0.3 }],
+  ]),
+  surveyQuestion(13, 'Khi được giao làm một sản phẩm nhưng không có mẫu cụ thể, bạn thường:', [
+    ['Tìm một mẫu có sẵn để làm theo.', { creativity: 0.2, organization: 0.25 }],
+    ['Thay đổi một vài chi tiết.', { creativity: 0.5 }],
+    ['Nghĩ ra một cách trình bày khác.', { creativity: 0.8, communication: 0.3 }],
+    ['Muốn thử một ý tưởng hoặc cách thể hiện hoàn toàn mới.', { creativity: 1, communication: 0.4, technologyData: 0.3 }],
+  ]),
+  surveyQuestion(14, 'Khi nhìn thấy một sản phẩm truyền thông, bạn thường chú ý đến:', [
+    ['Thông tin sản phẩm.', { communication: 0.25 }],
+    ['Màu sắc và hình thức.', { creativity: 0.55 }],
+    ['Cách ý tưởng được thể hiện.', { creativity: 0.75, communication: 0.55 }],
+    ['Ý tưởng, thông điệp và cách sản phẩm tạo ra cảm xúc cho người xem.', { creativity: 1, communication: 0.8, socialHuman: 0.5 }],
+  ]),
+  surveyQuestion(15, 'Khi phải nghĩ ý tưởng cho một hoạt động của trường, bạn thường:', [
+    ['Dựa vào những chương trình đã từng tổ chức.', { creativity: 0.2, organization: 0.25 }],
+    ['Kết hợp một vài ý tưởng quen thuộc.', { creativity: 0.5 }],
+    ['Nghĩ ra một hoạt động mới phù hợp với người tham gia.', { creativity: 0.8, socialHuman: 0.55, organization: 0.35 }],
+    ['Muốn tạo một concept mới và tìm cách biến nó thành trải nghiệm khác biệt.', { creativity: 1, organization: 0.5, communication: 0.45 }],
+  ]),
+  surveyQuestion(16, 'Khi có nhiều việc cần hoàn thành trong cùng một tuần, bạn thường:', [
+    ['Làm việc nào nhớ trước.', { organization: 0.2 }],
+    ['Viết danh sách các việc.', { organization: 0.45 }],
+    ['Sắp xếp việc theo mức độ ưu tiên.', { organization: 0.75, analysis: 0.35 }],
+    ['Lập kế hoạch theo thời gian, mức độ quan trọng và khả năng phát sinh vấn đề.', { organization: 1, analysis: 0.7 }],
+  ]),
+  surveyQuestion(17, 'Khi tổ chức một hoạt động có nhiều người tham gia, bạn thích:', [
+    ['Phụ trách một phần việc cụ thể.', { organization: 0.3 }],
+    ['Hỗ trợ các thành viên khác khi cần.', { organization: 0.5, communication: 0.35 }],
+    ['Phân chia công việc và theo dõi tiến độ.', { organization: 0.8, communication: 0.45 }],
+    ['Lập kế hoạch, phân công, điều phối và xử lý các vấn đề phát sinh.', { organization: 1, communication: 0.65, analysis: 0.45 }],
+  ]),
+  surveyQuestion(18, 'Nếu kế hoạch đang thực hiện bất ngờ gặp sự cố, bạn thường:', [
+    ['Chờ người khác xử lý.', { organization: 0.15 }],
+    ['Tìm một cách giải quyết tạm thời.', { organization: 0.45, analysis: 0.3 }],
+    ['Điều chỉnh kế hoạch để tiếp tục.', { organization: 0.75, analysis: 0.55 }],
+    ['Xác định nguyên nhân, phân bổ lại nguồn lực và điều chỉnh toàn bộ kế hoạch nếu cần.', { organization: 1, analysis: 0.85, research: 0.35 }],
+  ]),
+  surveyQuestion(19, 'Khi muốn tìm hiểu sâu một chủ đề, bạn thường:', [
+    ['Đọc một bài viết tổng hợp.', { research: 0.25 }],
+    ['Xem nhiều nguồn khác nhau.', { research: 0.55, analysis: 0.3 }],
+    ['Tìm tài liệu có nguồn gốc rõ ràng.', { research: 0.8, analysis: 0.45 }],
+    ['Đối chiếu nhiều tài liệu và truy tìm nguồn gốc của thông tin.', { research: 1, analysis: 0.75, language: 0.25 }],
+  ]),
+  surveyQuestion(20, 'Khi đọc một tài liệu dài, bạn thường:', [
+    ['Đọc phần kết luận trước.', { research: 0.2 }],
+    ['Đọc những phần mình quan tâm.', { research: 0.4 }],
+    ['Đọc và ghi chú các ý chính.', { research: 0.75, analysis: 0.45 }],
+    ['Phân tích lập luận, bằng chứng, nguồn tư liệu và cách tác giả xây dựng kết luận.', { research: 1, analysis: 0.9, language: 0.3 }],
+  ]),
+  surveyQuestion(21, 'Khi gặp một nhận định như “Theo một nghiên cứu, vấn đề X đang gia tăng”, bạn thường:', [
+    ['Ghi nhận thông tin.', { research: 0.15 }],
+    ['Tìm xem nghiên cứu đó nói gì.', { research: 0.5 }],
+    ['Kiểm tra nguồn nghiên cứu.', { research: 0.8, analysis: 0.55 }],
+    ['Xem phương pháp, dữ liệu, phạm vi nghiên cứu trước khi chấp nhận kết luận.', { research: 1, analysis: 1, technologyData: 0.35 }],
+  ]),
+  surveyQuestion(22, 'Khi tìm hiểu một vấn đề xảy ra ở một quốc gia khác, bạn thường:', [
+    ['Chỉ quan tâm đến kết quả.', { international: 0.2 }],
+    ['Tìm hiểu thêm tin tức.', { international: 0.5, research: 0.3 }],
+    ['Tìm hiểu nguyên nhân và bối cảnh của quốc gia đó.', { international: 0.8, research: 0.65, socialHuman: 0.35 }],
+    ['So sánh lịch sử, văn hóa, chính trị và lợi ích của các bên liên quan.', { international: 1, research: 0.85, analysis: 0.75, socialHuman: 0.5 }],
+  ]),
+  surveyQuestion(23, 'Khi hai bên có lợi ích khác nhau trong một cuộc thảo luận, bạn thường:', [
+    ['Bảo vệ quan điểm của mình.', { communication: 0.25, international: 0.2 }],
+    ['Tìm điểm hai bên có thể đồng ý.', { communication: 0.55, socialHuman: 0.45 }],
+    ['Đề xuất phương án dung hòa lợi ích.', { communication: 0.8, organization: 0.45, international: 0.65 }],
+    ['Phân tích lợi ích của từng bên và tìm phương án có thể tạo đồng thuận.', { communication: 1, organization: 0.6, international: 1, analysis: 0.6 }],
+  ]),
+  surveyQuestion(24, 'Bạn cảm thấy thế nào khi phải làm việc với người đến từ nền văn hóa rất khác mình?', [
+    ['Khá khó thích nghi.', { international: 0.15, socialHuman: 0.2 }],
+    ['Có thể làm việc nếu có hướng dẫn rõ ràng.', { international: 0.45, organization: 0.25 }],
+    ['Thấy thú vị vì có cơ hội hiểu thêm về văn hóa khác.', { international: 0.75, socialHuman: 0.55 }],
+    ['Chủ động tìm hiểu sự khác biệt về văn hóa và điều chỉnh cách giao tiếp cho phù hợp.', { international: 1, communication: 0.85, socialHuman: 0.75, language: 0.5 }],
+  ]),
+  surveyQuestion(25, 'Khi được giới thiệu một công cụ số mới, bạn thường:', [
+    ['Chỉ dùng khi bắt buộc.', { technologyData: 0.15 }],
+    ['Học những chức năng cơ bản.', { technologyData: 0.45 }],
+    ['Tự thử thêm các chức năng khác.', { technologyData: 0.75, creativity: 0.3 }],
+    ['Chủ động tìm hiểu cách công cụ có thể cải thiện công việc hoặc giải quyết vấn đề.', { technologyData: 1, analysis: 0.55, organization: 0.35 }],
+  ]),
+  surveyQuestion(26, 'Khi có một lượng lớn dữ liệu cần xử lý, bạn thường muốn:', [
+    ['Xem một phần dữ liệu đại diện.', { technologyData: 0.2, analysis: 0.25 }],
+    ['Sắp xếp dữ liệu thành bảng.', { technologyData: 0.5, organization: 0.35 }],
+    ['Dùng công cụ để lọc và tìm thông tin.', { technologyData: 0.8, analysis: 0.65 }],
+    ['Dùng công cụ số để làm sạch, phân tích và tìm ra xu hướng từ dữ liệu.', { technologyData: 1, analysis: 1, research: 0.45 }],
+  ]),
+  surveyQuestion(27, 'Khi AI hoặc một công cụ tự động đưa ra một kết quả, bạn thường:', [
+    ['Sử dụng kết quả nếu có vẻ hợp lý.', { technologyData: 0.25, analysis: 0.15 }],
+    ['Kiểm tra lại một vài thông tin.', { technologyData: 0.5, analysis: 0.45 }],
+    ['So sánh kết quả với nguồn khác.', { technologyData: 0.75, analysis: 0.7, research: 0.55 }],
+    ['Kiểm tra dữ liệu đầu vào, cách xử lý và tính hợp lý của kết quả trước khi sử dụng.', { technologyData: 1, analysis: 1, research: 0.8 }],
+  ]),
+];
+
+const QUESTION_OPTION_EXTENSIONS: Record<number, OrientationOption[]> = {
+  4: [
+    { id: 'q4_opt5', label: 'Theo dõi cách dữ liệu và công nghệ thay đổi đời sống', profile: orientationProfile({ technologyData: 5, analysis: 4, research: 3 }) },
+    { id: 'q4_opt6', label: 'Khám phá địa điểm, văn hóa và cách tổ chức một chuyến đi', profile: orientationProfile({ international: 4, organization: 4, communication: 4 }) },
+  ],
+  6: [
+    { id: 'q6_opt6', label: 'Tìm hiểu nhu cầu người tham gia để điều chỉnh hoạt động', profile: orientationProfile({ socialHuman: 5, research: 3, organization: 3 }) },
+  ],
+  15: [
+    { id: 'q15_opt5', label: 'Thử một hoạt động nhỏ rồi lấy phản hồi để cải tiến', profile: orientationProfile({ creativity: 4, analysis: 3, organization: 3 }) },
+    { id: 'q15_opt6', label: 'Kể câu chuyện của hoạt động bằng hình ảnh hoặc video', profile: orientationProfile({ creativity: 5, communication: 4, technologyData: 3 }) },
+  ],
+  25: [
+    { id: 'q25_opt5', label: 'Hỏi người dùng khác để học cách họ áp dụng công cụ', profile: orientationProfile({ communication: 3, technologyData: 4, socialHuman: 2 }) },
+  ],
+  26: [
+    { id: 'q26_opt5', label: 'Hỏi người có kinh nghiệm cách sắp xếp dữ liệu', profile: orientationProfile({ communication: 3, organization: 3, technologyData: 3 }) },
+    { id: 'q26_opt6', label: 'Chọn vài dữ liệu tiêu biểu để kể lại câu chuyện chính', profile: orientationProfile({ communication: 4, creativity: 3, analysis: 3 }) },
+  ],
+};
+
+const ORIENTATION_QUESTION_BANK_EXTENDED = ORIENTATION_QUESTION_BANK.map((question) => ({
+  ...question,
+  options: [...question.options, ...(QUESTION_OPTION_EXTENSIONS[question.id] || [])],
+}));
+
+const DISTINCT_OPTION_LABELS: Record<number, string[]> = {
+  1: ['Áp dụng cách từng hiệu quả trong tình huống tương tự.', 'Hỏi người có kinh nghiệm để có thêm góc nhìn.', 'Tự tìm thông tin về các nguyên nhân có thể có.', 'Thử các hướng khác nhau rồi so sánh kết quả.'],
+  2: ['Đọc phần kết luận để nắm nhanh ý chính.', 'Tìm những con số nổi bật hoặc bất thường.', 'Đặt các nhóm số liệu cạnh nhau để so sánh.', 'Tìm mối liên hệ và xu hướng giữa các dữ liệu.'],
+  3: ['Tin nguồn mình đã quen sử dụng.', 'Chọn cách giải thích dễ hiểu và rõ ràng hơn.', 'Mở lại nguồn và kiểm tra bằng chứng đi kèm.', 'Đối chiếu dữ liệu, cách làm và lý do của từng nguồn.'],
+  4: ['Xin đổi sang phần việc phía sau hoặc hỗ trợ chuẩn bị.', 'Soạn trước ý chính rồi trình bày theo kế hoạch.', 'Trình bày và trao đổi khi người nghe đặt câu hỏi.', 'Điều chỉnh cách nói để thuyết phục từng nhóm người nghe.'],
+  5: ['Để người đó tự điều chỉnh nếu hiểu nhầm không gây ảnh hưởng.', 'Nói lại ý chính bằng một cách ngắn gọn hơn.', 'Đưa ví dụ cụ thể để người đó hình dung đúng.', 'Hỏi họ đang hiểu thế nào rồi điều chỉnh cách giải thích.'],
+  6: ['Nhận phần việc riêng và tự hoàn thành đúng hạn.', 'Chia sẻ tiến độ khi nhóm cần phối hợp.', 'Chủ động đưa ý tưởng và phản hồi trong thảo luận.', 'Kết nối các ý kiến để nhóm thống nhất cách làm.'],
+  7: ['Chờ họ lên tiếng vì không muốn làm họ khó xử.', 'Hỏi riêng xem họ có cần hỗ trợ gì không.', 'Quan sát thêm để hiểu điều gì khiến họ không thoải mái.', 'Mời họ tham gia theo cách khiến họ cảm thấy an toàn và được lắng nghe.'],
+  8: ['Xem vấn đề có liên quan trực tiếp đến mình không.', 'Tìm số người hoặc nhóm đang chịu ảnh hưởng.', 'Tìm nguyên nhân và các bên liên quan.', 'Tìm hiểu tác động lên con người rồi nghĩ cách cải thiện.'],
+  9: ['Giữ quan điểm và tập trung bảo vệ lý lẽ của mình.', 'Nghe họ giải thích trước khi phản hồi.', 'Hỏi thêm để hiểu căn cứ phía sau quan điểm đó.', 'Đặt mình vào hoàn cảnh của họ để hiểu cả lý do và cảm xúc.'],
+  10: ['Tập trung vào điều tác giả muốn nói.', 'Ghi nhớ những từ hoặc hình ảnh gây ấn tượng.', 'Quan sát cách câu chữ được chọn để dẫn dắt người đọc.', 'Thử giải thích sắc thái và cảm xúc mà ngôn từ tạo ra.'],
+  11: ['Bỏ qua nếu từ đó không ảnh hưởng đến nội dung.', 'Tra nghĩa nhanh rồi tiếp tục đọc.', 'Tìm ví dụ để biết từ đó dùng trong câu thế nào.', 'So sánh cách dùng từ trong các bối cảnh và nền văn hóa khác nhau.'],
+  12: ['Giữ cấu trúc và từ ngữ gần với bản gốc nhất.', 'Ưu tiên truyền đạt đúng thông tin chính.', 'Viết lại sao cho người đọc ngôn ngữ mới thấy tự nhiên.', 'Giữ cả sắc thái, hàm ý và bối cảnh văn hóa của bản gốc.'],
+  13: ['Tìm một mẫu tương tự để bảo đảm làm đúng yêu cầu.', 'Giữ bố cục quen thuộc nhưng thay một vài chi tiết.', 'Kết hợp những ý tưởng đã biết thành cách trình bày riêng.', 'Bắt đầu từ một concept mới rồi thử biến nó thành sản phẩm.'],
+  14: ['Xem sản phẩm đang cung cấp thông tin gì.', 'Chú ý màu sắc, bố cục và hình thức thể hiện.', 'Tìm xem ý tưởng được chuyển thành hình ảnh hay câu chữ ra sao.', 'Suy nghĩ về thông điệp và cảm xúc sản phẩm tạo ra cho người xem.'],
+  15: ['Dựa vào một chương trình từng làm tốt để triển khai.', 'Ghép vài hoạt động quen thuộc thành một chương trình mới.', 'Thiết kế hoạt động theo nhu cầu và hoàn cảnh người tham gia.', 'Xây dựng một concept riêng rồi biến nó thành trải nghiệm khác biệt.'],
+  16: ['Bắt đầu với việc chợt nhớ ra trước.', 'Ghi tất cả việc cần làm vào một danh sách.', 'Chọn việc quan trọng hoặc gấp để làm trước.', 'Lập lịch có thời hạn, thứ tự ưu tiên và thời gian dự phòng.'],
+  17: ['Nhận một phần việc rõ ràng và hoàn thành nó.', 'Đứng phía sau hỗ trợ khi thành viên khác cần.', 'Chia nhiệm vụ và theo dõi tiến độ của từng phần.', 'Điều phối toàn bộ hoạt động và xử lý tình huống phát sinh.'],
+  18: ['Báo người phụ trách và chờ hướng xử lý.', 'Tìm cách tạm thời để công việc không bị dừng.', 'Sắp xếp lại kế hoạch để tiếp tục phần còn lại.', 'Tìm nguyên nhân, chia lại nguồn lực và cập nhật toàn bộ kế hoạch.'],
+  19: ['Đọc một bài tổng hợp để có hình dung ban đầu.', 'Xem nhiều bài viết để biết các góc nhìn khác nhau.', 'Tìm tài liệu có tác giả và nguồn xuất bản rõ ràng.', 'Lần theo nguồn gốc rồi đối chiếu các tài liệu liên quan.'],
+  20: ['Đọc kết luận trước để biết tài liệu muốn nói gì.', 'Chọn những phần liên quan trực tiếp đến điều mình cần.', 'Ghi chú luận điểm chính trong khi đọc.', 'Theo dõi lập luận, bằng chứng và cách tác giả đi đến kết luận.'],
+  21: ['Ghi nhận nhận định như một thông tin tham khảo.', 'Tìm đọc bản tóm tắt hoặc nội dung nghiên cứu.', 'Kiểm tra tác giả, nguồn công bố và dữ liệu được trích dẫn.', 'Xem phương pháp, mẫu dữ liệu và phạm vi trước khi tin kết luận.'],
+  22: ['Chú ý kết quả cuối cùng của vấn đề.', 'Đọc thêm tin tức từ quốc gia đó.', 'Tìm hiểu nguyên nhân và bối cảnh tại địa phương.', 'So sánh lịch sử, văn hóa, chính trị và lợi ích của các bên.'],
+  23: ['Trình bày rõ lý do mình không muốn thay đổi.', 'Tìm một điểm mà hai bên cùng chấp nhận.', 'Đề xuất phương án chia sẻ hoặc dung hòa lợi ích.', 'Làm rõ lợi ích từng bên rồi xây dựng phương án tạo đồng thuận.'],
+  24: ['Giữ cách giao tiếp quen thuộc và chờ đối phương thích nghi.', 'Làm theo hướng dẫn hoặc quy ước đã thống nhất.', 'Chủ động hỏi về những khác biệt trong cách sống và làm việc.', 'Tìm hiểu văn hóa trước rồi điều chỉnh cách giao tiếp cho phù hợp.'],
+  25: ['Chỉ mở công cụ khi công việc bắt buộc phải dùng.', 'Học các chức năng cần thiết để hoàn thành nhiệm vụ.', 'Tự thử các chức năng khác để xem công cụ làm được gì.', 'Tìm cách dùng công cụ để rút ngắn việc hoặc giải quyết vấn đề.'],
+  26: ['Xem một phần dữ liệu để nắm tình hình chung.', 'Đưa dữ liệu vào bảng để dễ theo dõi.', 'Dùng bộ lọc hoặc công cụ tìm các nhóm cần quan tâm.', 'Làm sạch dữ liệu, phân tích và tìm xu hướng bằng công cụ số.'],
+  27: ['Dùng kết quả nếu phù hợp với điều mình đang nghĩ.', 'Kiểm tra nhanh vài thông tin quan trọng.', 'Đối chiếu kết quả với một nguồn độc lập.', 'Kiểm tra đầu vào, cách xử lý và tính hợp lý trước khi sử dụng.'],
+};
+
+const DISTINCT_MAX_SELECTIONS: Record<number, number> = {
+  4: 3,
+  6: 2,
+  15: 2,
+  25: 2,
+  26: 2,
+};
+
+const USSH_QUESTION_TEXTS: Record<number, string> = {
+  1: 'Khi nhóm được giao tìm hiểu một vấn đề của sinh viên hoặc cộng đồng quanh trường, bạn thường:',
+  2: 'Khi xem bảng số liệu tuyển sinh hoặc kết quả khảo sát sinh viên, bạn thích:',
+  3: 'Khi hai bài viết về một vấn đề xã hội đưa ra kết luận khác nhau, bạn thường:',
+  4: 'Khi phải trình bày một ý tưởng cho câu lạc bộ hoặc hoạt động sinh viên, bạn thường:',
+  5: 'Khi một bạn trong nhóm hiểu sai ý tưởng bạn đề xuất cho bài tập, bạn thường:',
+  6: 'Trong một bài tập nhóm về xã hội, văn hóa hoặc truyền thông, bạn thường thích:',
+  7: 'Khi thấy một thành viên trong nhóm làm dự án cộng đồng ít nói và không thoải mái, bạn thường:',
+  8: 'Khi tìm hiểu một vấn đề đang ảnh hưởng đến sinh viên hoặc cộng đồng, điều khiến bạn quan tâm nhất là:',
+  9: 'Khi làm việc với người có góc nhìn rất khác mình trong một cuộc thảo luận, bạn thường:',
+  10: 'Khi đọc một bài báo, bài giới thiệu văn hóa hoặc câu chuyện về con người, bạn thường:',
+  11: 'Khi gặp một từ tiếng Anh hoặc ngôn ngữ khác trong tài liệu giao lưu quốc tế, bạn thường:',
+  12: 'Nếu cần chuyển một đoạn giới thiệu về văn hóa Việt Nam sang ngôn ngữ khác, bạn quan tâm nhất đến:',
+  13: 'Khi được giao làm một sản phẩm truyền thông cho hoạt động của trường nhưng không có mẫu cụ thể, bạn thường:',
+  14: 'Khi xem một sản phẩm truyền thông giới thiệu ngành học, sự kiện hoặc di sản văn hóa, bạn thường chú ý đến:',
+  15: 'Khi nghĩ ý tưởng cho một ngày hội sinh viên hoặc chương trình giới thiệu văn hóa, bạn thường:',
+  16: 'Khi có nhiều bài tập, hoạt động câu lạc bộ và việc cá nhân trong cùng một tuần, bạn thường:',
+  17: 'Khi tổ chức một tọa đàm, triển lãm hoặc hoạt động có nhiều sinh viên tham gia, bạn thích:',
+  18: 'Nếu một sự kiện sinh viên hoặc dự án cộng đồng bất ngờ gặp sự cố, bạn thường:',
+  19: 'Khi muốn tìm hiểu sâu một chủ đề về xã hội, lịch sử hoặc văn hóa, bạn thường:',
+  20: 'Khi đọc một tài liệu dài về xã hội, chính sách hoặc lịch sử, bạn thường:',
+  21: 'Khi gặp nhận định như “một nghiên cứu cho thấy sinh viên đang thay đổi thói quen”, bạn thường:',
+  22: 'Khi tìm hiểu một vấn đề xảy ra ở một quốc gia khác, bạn thường:',
+  23: 'Khi hai nhóm có lợi ích khác nhau trong một hoạt động hợp tác hoặc giao lưu, bạn thường:',
+  24: 'Bạn cảm thấy thế nào khi làm việc với sinh viên quốc tế hoặc người có nền văn hóa rất khác mình?',
+  25: 'Khi được giới thiệu một công cụ số mới để học tập, làm nội dung hoặc nghiên cứu, bạn thường:',
+  26: 'Khi có một lượng lớn dữ liệu khảo sát hoặc dữ liệu tuyển sinh cần xử lý, bạn thường muốn:',
+  27: 'Khi AI hoặc một công cụ tự động đưa ra kết quả về nội dung, dữ liệu hoặc nghiên cứu, bạn thường:',
+};
+
+const ORIENTATION_QUESTION_BANK_WITH_DISTINCT_LABELS = ORIENTATION_QUESTION_BANK_EXTENDED.map((question) => ({
+  ...question,
+  text: USSH_QUESTION_TEXTS[question.id] || question.text,
+  maxSelect: DISTINCT_MAX_SELECTIONS[question.id] || question.maxSelect,
+  options: question.options.map((option, index) => ({
+    ...option,
+    label: DISTINCT_OPTION_LABELS[question.id]?.[index] || option.label,
+  })),
+}));
+
+// Group related competency signals while keeping the competency labels hidden in the UI.
+const ORIENTATION_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+export const ORIENTATION_QUESTIONS: OrientationQuestion[] = ORIENTATION_DISPLAY_ORDER
+  .map((id) => ORIENTATION_QUESTION_BANK_WITH_DISTINCT_LABELS.find((question) => question.id === id))
+  .filter((question) => Boolean(question)) as OrientationQuestion[];
 
 /**
  * ============================================================================
@@ -1264,7 +1734,7 @@ export function calculateTheoreticalMaxScores(questions: OrientationQuestion[]):
   return maxScores;
 }
 
-// Cache tính sẵn UserMax cho bộ 15 câu hiện có
+// Cache tính sẵn UserMax cho bộ câu hỏi đang được sử dụng
 export const THEORETICAL_MAX_PROFILE = calculateTheoreticalMaxScores(ORIENTATION_QUESTIONS);
 
 /**
@@ -1300,14 +1770,15 @@ export function calculateUserProfile(
   // Cộng dồn vector điểm của các đáp án được chọn
   Object.entries(answers).forEach(([questionId, selectedOptionIds]) => {
     const questionWeight = questions.find((question) => question.id === Number(questionId))?.weight || 1;
-    selectedOptionIds.forEach((optId) => {
-      const opt = optionMap.get(optId);
-      if (opt && opt.profile) {
-        CRITERIA_KEYS.forEach((key) => {
-          userRawProfile[key] += (opt.profile[key] || 0) * questionWeight;
-        });
-      }
-    });
+    const selectedOptions = selectedOptionIds
+      .map((optId) => optionMap.get(optId))
+      .filter((opt): opt is OrientationQuestion['options'][0] => Boolean(opt));
+    if (selectedOptions.length > 0) {
+      CRITERIA_KEYS.forEach((key) => {
+        const averageAnswerWeight = selectedOptions.reduce((sum, opt) => sum + (opt.profile[key] || 0), 0) / selectedOptions.length;
+        userRawProfile[key] += averageAnswerWeight * questionWeight;
+      });
+    }
   });
 
   const userMaxProfile = THEORETICAL_MAX_PROFILE;
@@ -1340,7 +1811,7 @@ export function calculateUserProfile(
  * TÍNH ĐỘ TƯƠNG ĐỒNG VÀ % PHÙ HỢP (FIT SCORE) CHO MỖI NGÀNH
  * 
  * 1. Difference[i] = |UserScore[i] - MajorScore[i]|
- * 2. Similarity[i] = 100 - Difference[i] (khoảng 0 - 100)
+ * 2. Similarity[i] = calibrated(100 - Difference[i]) (khoảng 0 - 100)
  * 3. FitScore = sum(Similarity[i] * Weight[i])
  * 4. Làm tròn: Math.round(FitScore)
  * Tuyệt đối không cộng điểm ảo, không random.
@@ -1369,7 +1840,9 @@ export function calculateMajorFit(
     const uScore = userProfile[key] ?? 50;
     const mScore = majorProfile.profile[key] ?? 50;
     const difference = Math.abs(uScore - mScore);
-    const similarity = Math.max(0, 100 - difference);
+    // A mild contrast calibration prevents every middle/high profile from
+    // clustering near 90 while preserving weighted-similarity semantics.
+    const similarity = Math.max(0, Math.min(100, 100 - difference * 1.35));
     const normalizedWeight = (majorProfile.weights[key] || 0) / totalWeight;
     const weightedContribution = similarity * normalizedWeight;
 
@@ -1603,4 +2076,25 @@ export function loadSurveyHistory(): OrientationHistoryItem[] {
     console.error('Lỗi khi tải lịch sử khảo sát:', err);
   }
   return [];
+}
+
+export function clearSurveyHistory(): void {
+  try {
+    localStorage.removeItem(STORAGE_HISTORY_KEY);
+  } catch (err) {
+    console.error('Lỗi khi xóa lịch sử khảo sát:', err);
+  }
+}
+
+export function deleteSurveyHistoryItem(historyId: string): void {
+  try {
+    const nextHistory = loadSurveyHistory().filter((item) => item.id !== historyId);
+    if (nextHistory.length === 0) {
+      localStorage.removeItem(STORAGE_HISTORY_KEY);
+      return;
+    }
+    localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(nextHistory));
+  } catch (err) {
+    console.error('Lỗi khi xóa một lịch sử khảo sát:', err);
+  }
 }

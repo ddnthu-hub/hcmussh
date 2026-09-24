@@ -17,8 +17,10 @@ import {
   saveDraftSurvey, 
   loadDraftSurvey, 
   clearDraftSurvey, 
-  saveSurveyHistory, 
-  loadSurveyHistory 
+  saveSurveyHistory,
+  loadSurveyHistory,
+  clearSurveyHistory,
+  deleteSurveyHistoryItem
 } from '../data/orientationData';
 import { getAdmissionScores, AdmissionScoreDoc } from '../lib/firebase';
 import { Pagination } from '../components/Pagination';
@@ -40,7 +42,8 @@ import {
   BookOpen,
   Calendar,
   ExternalLink,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 
 interface MajorOrientationPageProps {
@@ -136,8 +139,8 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
         if (current.length < maxSelectForCurrent) {
           next = [...current, optionId];
         } else {
-          // Nếu đã đủ số lượng, thay thế phần tử cũ nhất hoặc không cho chọn thêm
-          next = [...current.slice(1), optionId];
+          // Đã đủ giới hạn: giữ nguyên lựa chọn hiện tại.
+          return;
         }
       }
     }
@@ -148,7 +151,11 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
   };
 
   // Next question / Submit
+  const isCurrentSelectionValid = currentSelectedOptions.length <= maxSelectForCurrent;
+
   const handleNextQuestion = () => {
+    if (!currentQuestion || currentSelectedOptions.length === 0 || !isCurrentSelectionValid) return;
+
     if (currentQuestionIndex < ORIENTATION_QUESTIONS.length - 1) {
       const nextIdx = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIdx);
@@ -213,6 +220,22 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
     setHasDraftNotice(false);
   };
 
+  const handleClearSurveyHistory = () => {
+    if (historyList.length === 0) return;
+    if (!window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử khảo sát định hướng không?')) return;
+    clearSurveyHistory();
+    setHistoryList([]);
+    setActiveViewMode('quiz');
+  };
+
+  const handleDeleteSurveyHistoryItem = (historyId: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa lần khảo sát này không?')) return;
+    deleteSurveyHistoryItem(historyId);
+    const nextHistory = loadSurveyHistory();
+    setHistoryList(nextHistory);
+    if (nextHistory.length === 0) setActiveViewMode('quiz');
+  };
+
   // Reset Quiz
   const handleResetQuiz = () => {
     clearDraftSurvey();
@@ -257,7 +280,7 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
         <div>
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[var(--ussh-blue)]/10 text-[var(--ussh-blue-dark)] text-xs font-bold mb-2">
             <Compass className="w-3.5 h-3.5 text-[var(--ussh-blue-dark)]" />
-            <span>Tư vấn định hướng ngành học 2026 – 2027</span>
+            <span>Tư vấn định hướng ngành học 2027</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--ussh-blue-dark)] tracking-tight">
             Định hướng ngành học & Khám phá tiềm năng
@@ -313,7 +336,7 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
       )}
 
       {/* ====================================================================
-          15-QUESTION SURVEY & RESULTS
+          ORIENTATION SURVEY & RESULTS
          ==================================================================== */}
       {activeViewMode === 'quiz' && (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -325,7 +348,7 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
                   <h2 className="text-lg font-bold">Khảo sát định hướng ngành</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-slate-700">
-                  Bộ khảo sát gồm {ORIENTATION_QUESTIONS.length} câu hỏi về sở thích, năng lực và xu hướng cá nhân để xây dựng hồ sơ phù hợp với 42 ngành hiện có trong dữ liệu USSH.
+                  Bộ khảo sát gồm {ORIENTATION_QUESTIONS.length} câu hỏi ngắn về sở thích, năng lực và cách học để xây dựng hồ sơ phù hợp với các ngành hiện có trong dữ liệu USSH.
                 </p>
               </div>
 
@@ -409,6 +432,8 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
                       <button
                         key={option.id}
                         onClick={() => handleToggleOption(option.id)}
+                        aria-pressed={isSelected}
+                        disabled={maxSelectForCurrent > 1 && !isSelected && currentSelectedOptions.length >= maxSelectForCurrent}
                         className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all text-xs sm:text-sm flex items-start space-x-3.5 ${
                           isSelected
                             ? 'border-[var(--ussh-blue)] bg-blue-50/60 shadow-xs text-slate-900 font-medium'
@@ -451,7 +476,7 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
 
                   <button
                     onClick={handleNextQuestion}
-                    disabled={currentSelectedOptions.length === 0}
+                    disabled={currentSelectedOptions.length === 0 || !isCurrentSelectionValid}
                     className={`px-5 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
                       currentSelectedOptions.length === 0
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -488,7 +513,7 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
                         Kết quả định hướng ngành học
                       </h2>
                       <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-                        Dựa trên hồ sơ 9 tiêu chí được tổng hợp từ 15 câu trả lời của bạn, hệ thống đã đo lường mức độ tương đồng và xếp hạng các ngành đào tạo tại USSH.
+                        Dựa trên hồ sơ 9 tiêu chí được tổng hợp từ {ORIENTATION_QUESTIONS.length} câu trả lời của bạn, hệ thống đã đo lường mức độ tương đồng và xếp hạng các ngành đào tạo tại USSH.
                       </p>
                     </div>
 
@@ -838,6 +863,14 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Làm lại khảo sát</span>
               </button>
+              <button
+                type="button"
+                onClick={handleClearSurveyHistory}
+                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] font-bold text-rose-700 transition-colors hover:bg-rose-100 whitespace-nowrap"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Xóa lịch sử</span>
+              </button>
             </div>
 
             {historyList.length === 0 ? (
@@ -874,8 +907,17 @@ export const MajorOrientationPage: React.FC<MajorOrientationPageProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-200/60 flex justify-end">
+                    <div className="pt-2 border-t border-slate-200/60 flex flex-wrap justify-end gap-2">
                       <button
+                        type="button"
+                        onClick={() => handleDeleteSurveyHistoryItem(item.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Xóa</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleLoadHistoryItem(item)}
                         className="px-3.5 py-1.5 rounded-lg bg-[var(--ussh-blue)] text-white text-xs font-bold hover:bg-[var(--ussh-blue-dark)] transition-colors flex items-center space-x-1"
                       >

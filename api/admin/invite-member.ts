@@ -16,6 +16,7 @@ interface ApiResponse {
 interface InviteBody {
   email?: unknown;
   name?: unknown;
+  password?: unknown;
   role?: unknown;
 }
 
@@ -47,45 +48,7 @@ function getBearerToken(request: ApiRequest): string | null {
   return value.slice("Bearer ".length).trim() || null;
 }
 
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>'"]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "'": "&#39;",
-    "\"": "&quot;",
-  })[character] || character);
-}
-
-async function sendInvitationEmail(email: string, name: string, role: "admin" | "editor", resetLink: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM;
-  if (!apiKey || !from) throw new Error("Thiếu RESEND_API_KEY hoặc MAIL_FROM trên Vercel.");
-
-  const roleLabel = role === "admin" ? "Admin" : "Editor";
-  const result = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [email],
-      subject: "Lời mời thiết lập tài khoản quản trị USSH",
-      text: `Xin chào ${name},\n\nBạn được mời tham gia hệ thống quản trị USSH.\nVai trò: ${roleLabel}\n\nThiết lập mật khẩu: ${resetLink}\n\nNếu bạn không mong đợi email này, vui lòng bỏ qua.\n\nTrân trọng,\nHệ thống quản trị USSH`,
-      html: `<p>Xin chào ${escapeHtml(name)},</p><p>Bạn được mời tham gia hệ thống quản trị USSH.</p><p><strong>Vai trò:</strong> ${roleLabel}</p><p><a href="${escapeHtml(resetLink)}" style="display:inline-block;padding:12px 18px;background:#123b69;color:#fff;text-decoration:none;border-radius:8px">Thiết lập mật khẩu</a></p><p>Nếu bạn không mong đợi email này, vui lòng bỏ qua.</p><p>Trân trọng,<br/>Hệ thống quản trị USSH</p>`,
-    }),
-  });
-
-  if (!result.ok) {
-    const detail = await result.text();
-    console.error("Resend invitation failed", result.status, detail);
-    throw new Error("Email provider không gửi được email mời.");
-  }
-}
-
-async function findOrCreateAuthUser(email: string, name: string): Promise<{user: UserRecord; created: boolean}> {
+async function getOrCreateAuthUser(email: string, name: string, password: string): Promise<{user: UserRecord; created: boolean}> {
   const auth = getAuth(getAdminApp());
   try {
     return {user: await auth.getUserByEmail(email), created: false};
@@ -93,7 +56,7 @@ async function findOrCreateAuthUser(email: string, name: string): Promise<{user:
     const authError = error as {code?: string};
     if (authError.code !== "auth/user-not-found") throw error;
     return {
-      user: await auth.createUser({email, displayName: name, disabled: false}),
+      user: await auth.createUser({email, password, displayName: name, disabled: false}),
       created: true,
     };
   }
@@ -125,15 +88,17 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const callerSnapshot = await db.collection("admins").where("email", "==", callerEmail).limit(1).get();
     const callerMember = callerSnapshot.docs[0]?.data();
-    if (!callerMember || !SUPERADMIN_ROLE_NAMES.includes(String(callerMember.role).toLowerCase())) {
-      sendJson(response, 403, "Chỉ Super Admin mới được mời thành viên.");
+    if (!callerMember || !SUPERADMIN_ROLE_NAMES.includes(String(callerMember.role || "").toLowerCase())) {
+      sendJson(response, 403, "Chỉ Super Admin mới được thêm thành viên.");
       return;
     }
 
     const body = (request.body || {}) as InviteBody;
     const email = String(body.email || "").trim().toLowerCase();
     const name = String(body.name || "").trim();
+    const password = String(body.password || "").trim();
     const role = String(body.role || "").trim().toLowerCase();
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       sendJson(response, 400, "Email không hợp lệ.");
       return;
@@ -142,12 +107,16 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       sendJson(response, 400, "Họ tên không được để trống.");
       return;
     }
-    if (role !== "admin" && role !== "editor") {
-      sendJson(response, 400, "Chỉ được mời Admin hoặc Editor.");
+    if (!password || password.length < 6) {
+      sendJson(response, 400, "Mật khẩu phải có ít nhất 6 ký tự.");
       return;
     }
-    if (email === callerEmail || SUPERADMIN_ROLE_NAMES.includes(role)) {
-      sendJson(response, 400, "Không thể mời hoặc thay đổi tài khoản Super Admin.");
+    if (role !== "admin" && role !== "editor") {
+      sendJson(response, 400, "Chỉ được thêm tài khoản Admin hoặc Editor.");
+      return;
+    }
+    if (email === callerEmail) {
+      sendJson(response, 400, "Không thể tạo tài khoản cho chính tài khoản Super Admin hiện tại.");
       return;
     }
 
@@ -157,44 +126,56 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       const existingData = existingMember.data();
       const existingRole = String(existingData.role || "").toLowerCase();
       if (SUPERADMIN_ROLE_NAMES.includes(existingRole)) {
-        sendJson(response, 400, "Không thể mời hoặc thay đổi tài khoản Super Admin.");
+        sendJson(response, 400, "Không thể tạo hoặc cấp quyền Super Admin cho tài khoản khác.");
         return;
       }
       if (String(existingData.status || "").toLowerCase() === "active") {
-        sendJson(response, 409, "Thành viên này đã được kích hoạt trong hệ thống.");
+        sendJson(response, 409, "Email này đã tồn tại trong hệ thống.");
         return;
       }
     }
 
-    const authResult = await findOrCreateAuthUser(email, name);
-    if (authResult.created) createdAuthUser = authResult.user;
-    const resetLink = await auth.generatePasswordResetLink(email, {
-      url: `${process.env.APP_BASE_URL || "https://usshwebsite.vercel.app"}/admin/login`,
-      handleCodeInApp: false,
-    });
+    let authUser: UserRecord;
+    try {
+      authUser = await auth.getUserByEmail(email);
+    } catch (error: unknown) {
+      const authError = error as {code?: string};
+      if (authError.code !== "auth/user-not-found") throw error;
+      const createdUser = await auth.createUser({email, password, displayName: name, disabled: false});
+      authUser = createdUser;
+      createdAuthUser = createdUser;
+    }
 
-    await sendInvitationEmail(email, name, role as "admin" | "editor", resetLink);
-
-    const memberRef = existingMember?.ref || db.collection("admins").doc(`admin_${authResult.user.uid}`);
+    const memberRef = existingMember?.ref || db.collection("admins").doc(`admin_${authUser.uid}`);
     const existingData = existingMember?.data() || {};
-    await memberRef.set({
-      ...existingData,
-      id: memberRef.id,
-      uid: authResult.user.uid,
-      email,
-      name,
-      role,
-      status: "pending",
-      invited_at: FieldValue.serverTimestamp(),
-      created_at: existingData.created_at || new Date().toISOString(),
-    }, {merge: true});
 
-    response.status(200).json({success: true, message: "Đã gửi lời mời."});
+    try {
+      await memberRef.set({
+        ...existingData,
+        id: memberRef.id,
+        uid: authUser.uid,
+        email,
+        name,
+        role,
+        status: "pending",
+        created_at: existingData.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        last_login: existingData.last_login || null,
+      }, {merge: true});
+
+      response.status(200).json({success: true, message: "Thêm thành viên thành công."});
+    } catch (memberError) {
+      if (createdAuthUser) {
+        await auth.deleteUser(authUser.uid).catch(() => undefined);
+      }
+      throw memberError;
+    }
   } catch (error) {
     if (createdAuthUser) {
-      await getAuth(getAdminApp()).deleteUser(createdAuthUser.uid).catch(() => undefined);
+      const adminAuth = getAuth(getAdminApp());
+      await adminAuth.deleteUser(createdAuthUser.uid).catch(() => undefined);
     }
-    console.error("Admin invitation API failed", error);
-    sendJson(response, 500, "Không thể gửi email mời. Vui lòng kiểm tra cấu hình Vercel và thử lại.");
+    console.error("Admin member creation API failed", error);
+    sendJson(response, 500, error instanceof Error ? error.message : "Không thể tạo tài khoản quản trị. Vui lòng thử lại.");
   }
 }

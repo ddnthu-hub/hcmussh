@@ -63,12 +63,53 @@ export interface PredictionHistoryRecord {
 const STORAGE_KEY = 'ussh_prediction_history_2026';
 const LATEST_KEY = 'ussh_latest_prediction_id';
 
+function normalizeHistoryValue(value: unknown): string {
+  return value === undefined || value === null ? '' : String(value);
+}
+
+function getPredictionProfileKey(record: Omit<PredictionHistoryRecord, 'id' | 'createdAt' | 'formattedDate'>): string {
+  const input = record.inputState || {};
+  return JSON.stringify([
+    record.year,
+    record.majorId,
+    record.majorCode,
+    record.admissionForm,
+    record.combination,
+    record.programType,
+    record.scoreType,
+    normalizeHistoryValue(input.inputModeThpt),
+    normalizeHistoryValue(input.thptSub1),
+    normalizeHistoryValue(input.thptSub2),
+    normalizeHistoryValue(input.thptSub3),
+    normalizeHistoryValue(input.thptTotalInput),
+    normalizeHistoryValue(input.inputModeHocBa),
+    normalizeHistoryValue(input.hbSub1),
+    normalizeHistoryValue(input.hbSub2),
+    normalizeHistoryValue(input.hbSub3),
+    normalizeHistoryValue(input.hbTotalInput),
+    normalizeHistoryValue(input.dgnlInput),
+    normalizeHistoryValue(input.achievementBonusInput),
+    normalizeHistoryValue(input.priorityArea),
+    normalizeHistoryValue(input.priorityObject),
+  ]);
+}
+
+function removeDuplicateHistoryRecords(records: PredictionHistoryRecord[]): PredictionHistoryRecord[] {
+  const seen = new Set<string>();
+  return records.filter((record) => {
+    const key = getPredictionProfileKey(record);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function getPredictionHistory(): PredictionHistoryRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? removeDuplicateHistoryRecords(parsed) : [];
   } catch (err) {
     console.error('Error reading prediction history:', err);
     return [];
@@ -90,6 +131,13 @@ export function savePredictionRecord(record: Omit<PredictionHistoryRecord, 'id' 
 
   try {
     const history = getPredictionHistory();
+    const duplicate = history.find((item) => getPredictionProfileKey(item) === getPredictionProfileKey(record));
+    if (duplicate) {
+      localStorage.setItem(LATEST_KEY, duplicate.id);
+      window.dispatchEvent(new CustomEvent('ussh_prediction_updated', { detail: duplicate }));
+      return duplicate;
+    }
+
     // Prepend new record, keep up to 30 most recent
     const updated = [newRecord, ...history.filter(h => h.id !== newRecord.id)].slice(0, 30);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

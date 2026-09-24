@@ -49,7 +49,7 @@ export const AccessDeniedPage: React.FC = () => {
             className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Quay về Cổng thông tin Tuyển sinh</span>
+            <span>Quay về Cổng hệ thống</span>
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAdminMembers, inviteAdminMember, saveAdminMember, deleteAdminMember } from '../lib/firebase';
+import { getAdminMembers, addAdminMember, saveAdminMember, deleteAdminMember } from '../lib/firebase';
 import { AdminMemberDoc, AdminRole } from '../types';
 import { 
   Users, 
@@ -27,6 +27,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
   const [members, setMembers] = useState<AdminMemberDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingMember, setEditingMember] = useState<Partial<AdminMemberDoc> | null>(null);
+  const [newMemberPassword, setNewMemberPassword] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const isSuperadmin = currentAdminRole === 'superadmin';
@@ -78,19 +79,25 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
 
     try {
       if (!editingMember.id) {
-        await inviteAdminMember({
+        if (newMemberPassword.length < 6) {
+          alert('Mật khẩu phải có ít nhất 6 ký tự.');
+          return;
+        }
+        await addAdminMember({
           email: editingMember.email.trim().toLowerCase(),
           name: editingMember.name.trim(),
+          password: newMemberPassword,
           role: editingMember.role === 'admin' ? 'admin' : 'editor',
         });
       } else {
         await saveAdminMember(editingMember, currentAdminEmail);
       }
       setEditingMember(null);
+      setNewMemberPassword('');
       await loadMembers();
     } catch (err) {
       console.error('Error saving member:', err);
-      alert(err instanceof Error ? err.message : 'Không thể gửi lời mời cán bộ.');
+      alert(err instanceof Error ? err.message : 'Không thể thêm thành viên quản trị.');
     }
   };
 
@@ -149,15 +156,6 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
           </button>
-          {isSuperadmin && (
-            <button
-              onClick={() => setEditingMember({ email: '', name: '', role: 'editor', status: 'pending' })}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[var(--ussh-blue)] hover:bg-[var(--ussh-blue-dark)] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Mời cán bộ mới</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -226,8 +224,8 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                         : 'bg-amber-100 text-amber-800'
                     }`}>
                       {member.status === 'active'
-                        ? 'Đang hoạt động'
-                        : 'Chưa kích hoạt tài khoản'}
+                        ? 'Active'
+                        : 'Pending'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-slate-500 text-[11px]">
@@ -272,7 +270,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 text-xs space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">
-                {editingMember.id ? 'Cập nhật thông tin cán bộ' : 'Mời cán bộ quản trị'}
+                {editingMember.id ? 'Cập nhật thông tin cán bộ' : 'Thêm tài khoản quản trị'}
               </h3>
               <button onClick={() => setEditingMember(null)} className="text-slate-400">
                 <X className="w-4 h-4" />
@@ -281,19 +279,36 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
 
             <form onSubmit={handleSave} className="space-y-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Email đăng nhập *</label>
+                <label className="block font-bold text-slate-700 mb-1">Email *</label>
                 <input
                   type="email"
                   value={editingMember.email || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
                   className="w-full p-2.5 rounded-lg border border-slate-300 font-mono"
-                  placeholder="Nhập email người được mời"
+                  placeholder="Nhập email tài khoản"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Họ và tên cán bộ *</label>
+                {!editingMember.id && (
+                  <>
+                    <label className="block font-bold text-slate-700 mb-1">Mật khẩu *</label>
+                    <input
+                      type="password"
+                      value={newMemberPassword}
+                      onChange={(e) => setNewMemberPassword(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-slate-300 font-mono"
+                      placeholder="Ít nhất 6 ký tự"
+                      minLength={6}
+                      required
+                    />
+                  </>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Họ và tên *</label>
                 <input
                   type="text"
                   value={editingMember.name || ''}
@@ -306,7 +321,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Vai trò được mời *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Role *</label>
                   <select
                     value={editingMember.role || 'editor'}
                     onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value as AdminRole })}
@@ -315,6 +330,20 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   >
                     <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Trạng thái *</label>
+                  <select
+                    value={editingMember.status || 'pending'}
+                    onChange={(e) => setEditingMember({ ...editingMember, status: e.target.value as AdminMemberDoc['status'] })}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 bg-white font-semibold"
+                    disabled={isProtectedSuperadmin(editingMember)}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
@@ -331,7 +360,7 @@ export const AdminMembersPage: React.FC<AdminMembersPageProps> = ({
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-[var(--ussh-blue)] text-white font-bold"
                 >
-                  Mời
+                  {editingMember.id ? 'Lưu thay đổi' : 'Thêm thành viên'}
                 </button>
               </div>
             </form>

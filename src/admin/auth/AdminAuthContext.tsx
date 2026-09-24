@@ -5,7 +5,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { activateAdminMember, auth, findAdminMemberByEmail, getAdminMembers, createAuditLog } from '../../lib/firebase';
+import { auth, findAdminMemberByEmail, ensureAdminMemberRecordForUser, createAuditLog } from '../../lib/firebase';
 import { AdminMemberDoc, AdminRole } from '../../types';
 
 interface AdminAuthContextType {
@@ -66,7 +66,15 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         try {
           unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
             if (fbUser && fbUser.email) {
-              const member = await findAdminMemberByEmail(fbUser.email);
+              let member = await findAdminMemberByEmail(fbUser.email);
+              if (!member) {
+                member = await ensureAdminMemberRecordForUser({
+                  uid: fbUser.uid,
+                  email: fbUser.email,
+                  name: fbUser.displayName || fbUser.email.split('@')[0],
+                });
+              }
+
               if (member && member.status === 'active') {
                 const normalizedRole = normalizeAdminRole(member.role);
                 const normalizedMember = { ...member, role: normalizedRole };
@@ -78,7 +86,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 setAdminUser(null);
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
               } else if (member && member.status === 'pending') {
-                setError('Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.');
+                setError('Tài khoản đang chờ cấp quyền truy cập quản trị. Vui lòng liên hệ Super Admin.');
                 setAdminUser(null);
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
               } else {
@@ -88,7 +96,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   email: fbUser.email,
                   name: fbUser.displayName || fbUser.email.split('@')[0],
                   role: 'editor',
-                  status: 'inactive', // Not authorized by default
+                  status: 'inactive',
                   created_at: new Date().toISOString(),
                 });
               }
@@ -148,7 +156,18 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
          }
 
       // Verify authorization from Firestore / Admin Members database
-      const member = await findAdminMemberByEmail(normalizedEmail);
+      let member = await findAdminMemberByEmail(normalizedEmail);
+      if (!member) {
+        const fbUser = auth.currentUser;
+        if (fbUser && fbUser.email?.toLowerCase() === normalizedEmail) {
+          member = await ensureAdminMemberRecordForUser({
+            uid: fbUser.uid,
+            email: normalizedEmail,
+            name: fbUser.displayName || normalizedEmail.split('@')[0],
+          });
+        }
+      }
+
       if (!member) {
         const errText = 'Tài khoản không thuộc danh sách Cán bộ Quản trị hệ thống USSH.';
         setError(errText);
@@ -164,27 +183,14 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (member.status === 'pending') {
-        try {
-          await activateAdminMember();
-        } catch {
-          const errText = 'Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.';
-          setError(errText);
-          setLoading(false);
-          return { success: false, error: errText };
-        }
-        const activatedMember = await findAdminMemberByEmail(normalizedEmail);
-        if (!activatedMember || activatedMember.status !== 'active') {
-          const errText = 'Tài khoản chưa được kích hoạt. Vui lòng thiết lập tài khoản từ email mời.';
-          setError(errText);
-          setLoading(false);
-          return { success: false, error: errText };
-        }
+        const errText = 'Tài khoản đang chờ cấp quyền truy cập quản trị. Vui lòng liên hệ Super Admin.';
+        setError(errText);
+        setLoading(false);
+        return { success: false, error: errText };
       }
 
       // Success
-      const resolvedMember = member.status === 'pending'
-        ? await findAdminMemberByEmail(normalizedEmail)
-        : member;
+      const resolvedMember = member;
       if (!resolvedMember) {
         const errText = 'Không thể tải thông tin quyền quản trị.';
         setError(errText);

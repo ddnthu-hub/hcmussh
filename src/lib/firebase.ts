@@ -64,7 +64,7 @@ if (isFirebaseConfigured) {
 
 export { auth };
 
-export async function inviteAdminMember(params: { email: string; name: string; role: 'admin' | 'editor' }): Promise<void> {
+export async function addAdminMember(params: { email: string; name: string; password: string; role: 'admin' | 'editor' }): Promise<void> {
   if (!auth?.currentUser) throw new Error('Vui lòng đăng nhập lại tài khoản Super Admin.');
   const token = await auth.currentUser.getIdToken();
   const response = await fetch('/api/admin/invite-member', {
@@ -75,9 +75,30 @@ export async function inviteAdminMember(params: { email: string; name: string; r
     },
     body: JSON.stringify(params),
   });
-  const result = await response.json() as { message?: string };
-  if (!response.ok) throw new Error(result.message || 'Không thể gửi lời mời cán bộ.');
+
+  const responseText = await response.text();
+  let result: { message?: string } | null = null;
+
+  if (responseText) {
+    try {
+      result = JSON.parse(responseText) as { message?: string };
+    } catch {
+      const contentPreview = responseText.slice(0, 200).replace(/\s+/g, ' ');
+      throw new Error(
+        response.ok
+          ? 'Phản hồi máy chủ không hợp lệ. Vui lòng kiểm tra cấu hình API quản trị.'
+          : `API quản trị trả về dữ liệu không hợp lệ: ${contentPreview || 'HTML page'}.`
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(result?.message || 'Không thể thêm thành viên quản trị.');
+  }
 }
+
+/** @deprecated Use addAdminMember; endpoint now creates the account directly. */
+export const inviteAdminMember = addAdminMember;
 
 export async function activateAdminMember(): Promise<void> {
   if (!auth?.currentUser) throw new Error('Vui lòng đăng nhập lại tài khoản được mời.');
@@ -684,6 +705,37 @@ export async function findAdminMemberByEmail(email: string): Promise<AdminMember
   return member || null;
 }
 
+export async function ensureAdminMemberRecordForUser(params: { uid: string; email: string; name?: string }): Promise<AdminMemberDoc | null> {
+  const email = params.email.trim().toLowerCase();
+  if (!email || !params.uid) return null;
+
+  const existing = await findAdminMemberByEmail(email);
+  if (existing) return existing;
+
+  const placeholder: AdminMemberDoc = {
+    id: `admin_${params.uid}`,
+    uid: params.uid,
+    email,
+    name: params.name || email.split('@')[0],
+    role: 'editor',
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    last_login: new Date().toISOString(),
+  };
+
+  if (db && isFirebaseConfigured) {
+    try {
+      await setDoc(doc(db, 'admins', placeholder.id), placeholder);
+      return placeholder;
+    } catch (err) {
+      console.warn('Firestore create notice (admin from auth user):', err);
+    }
+  }
+
+  memoryMembers = [placeholder, ...memoryMembers.filter((m) => m.email.toLowerCase() !== email)];
+  return placeholder;
+}
+
 export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAdminEmail: string): Promise<void> {
   const isNew = !member.id;
   const docId = member.id || `admin_${Date.now()}`;
@@ -700,7 +752,7 @@ export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAd
     email: String(member.email || '').trim().toLowerCase(),
     name: String(member.name || 'Cán bộ quản trị'),
     role: (normalizedRole === 'super_admin' ? (member.role as AdminRole) : normalizedRole) as AdminRole,
-    status: member.status || 'pending',
+    status: member.status || 'active',
     created_at: member.created_at || new Date().toISOString(),
     last_login: member.last_login || new Date().toISOString(),
   };

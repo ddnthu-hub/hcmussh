@@ -5,30 +5,85 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function activeAdminMemberForCurrentUser() {
+      return isSignedIn() && (
+        (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
+        )
+        || (
+          exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
+        )
+      );
+    }
+
+    function currentAdminRole() {
+      if (!isSignedIn()) return null;
+      if (exists(/databases/$(database)/documents/admins/$(request.auth.uid))) {
+        return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
+      }
+      if (exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))) {
+        return get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role;
+      }
+      return null;
+    }
+
     // The current deployment identifies the single Super Admin by the existing
     // account email. Custom admin claims remain supported for staff access.
     function isSuperAdmin() {
       return isSignedIn()
-        && request.auth.token.email == 'vovanthu25122000@gmail.com';
+        && (
+          request.auth.token.email == 'vovanthu25122000@gmail.com'
+          || (
+            (
+              exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['superadmin', 'super_admin']
+              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
+            )
+            || (
+              exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
+              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role in ['superadmin', 'super_admin']
+              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
+            )
+          )
+        );
     }
 
     function isStaff() {
       return isSignedIn()
-        && (request.auth.token.admin == true
+        && (
+          request.auth.token.admin == true
           || request.auth.token.email in [
             'vovanthu25122000@gmail.com',
             'tuyensinh.ussh@vnuhcm.edu.vn',
             'truyenthong.ussh@vnuhcm.edu.vn'
-          ]);
+          ]
+          || activeAdminMemberForCurrentUser()
+        );
     }
 
     function isAdmin() {
       return isSignedIn()
-        && (request.auth.token.admin == true
+        && (
+          request.auth.token.admin == true
           || request.auth.token.email in [
             'vovanthu25122000@gmail.com',
             'tuyensinh.ussh@vnuhcm.edu.vn'
-          ]);
+          ]
+          || (
+            (
+              exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin', 'super_admin']
+              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
+            )
+            || (
+              exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
+              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role in ['admin', 'superadmin', 'super_admin']
+              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
+            )
+          )
+        );
     }
 
     function isSuperAdminRole(role) {
@@ -63,13 +118,13 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid
                     && request.resource.data.status == 'unanswered';
-        allow read: if isSignedIn()
-          && (resource.data.userId == request.auth.uid || isStaff());
-        allow update: if isStaff()
-              || (request.auth != null
-              && resource.data.userId == request.auth.uid
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'answerReadAt']));
-        allow delete: if isAdmin();
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isStaff());
+      allow update: if isStaff()
+            || (request.auth != null
+            && resource.data.userId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'answerReadAt']));
+      allow delete: if isAdmin();
     }
 
     // Admin accounts are authenticated with Firebase email/password. Custom

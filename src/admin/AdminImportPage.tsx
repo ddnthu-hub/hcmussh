@@ -150,8 +150,15 @@ export const AdminImportPage: React.FC<AdminImportPageProps> = ({
         hasError = true;
       }
 
-      // Validate Scale
-      const scale = Number(row.thang_diem || (score > 100 ? 1200 : 30));
+      // Validate Scale: prefer the file's explicit scale, then infer common USSH scales.
+      const explicitScale = Number(row.thang_diem);
+      const scale = Number.isFinite(explicitScale) && explicitScale > 0
+        ? explicitScale
+        : score > 100
+          ? 1200
+          : score > 30
+            ? 100
+            : 30;
       if (score > scale) {
         foundIssues.push({
           row: rowNum,
