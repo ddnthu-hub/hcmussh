@@ -1,7 +1,5 @@
+:::writing{variant="document" id="91584"}
 # HỆ THỐNG HỖ TRỢ TRA CỨU, ĐỊNH HƯỚNG NGÀNH VÀ DỰ ĐOÁN TUYỂN SINH USSH
-
-````md
-# Hệ thống hỗ trợ tra cứu, định hướng ngành và dự đoán tuyển sinh USSH
 
 Website hỗ trợ thí sinh tìm hiểu thông tin tuyển sinh, tra cứu điểm chuẩn, khám phá ngành học phù hợp và tham khảo khả năng trúng tuyển dựa trên dữ liệu tuyển sinh được sử dụng trong hệ thống.
 
@@ -11,8 +9,7 @@ Website hỗ trợ thí sinh tìm hiểu thông tin tuyển sinh, tra cứu đi�
 
 ## 🌐 Demo
 
-**Website:**  
-https://usshwebsite.vercel.app
+**Website:** https://usshwebsite.vercel.app
 
 ---
 
@@ -36,150 +33,6 @@ Nhập điểm / dự đoán
 Xem mục tiêu điểm
         ↓
 Tham khảo phân bố điểm
-````
-
-Hệ thống không nhằm thay thế các kênh tuyển sinh chính thức mà hỗ trợ người dùng tiếp cận và phân tích dữ liệu thuận tiện hơn.
-
----
-
-# Các chức năng chính
-
-## 1. Trang chủ
-
-Trang chủ cung cấp tổng quan về hệ thống và các chức năng chính.
-
-Người dùng có thể truy cập nhanh đến:
-
-* Tra cứu điểm chuẩn
-* Định hướng ngành
-* Dự đoán trúng tuyển
-* Mục tiêu điểm
-* Phân bố điểm
-
-Trang chủ cũng giới thiệu tổng quan về các ngành và chương trình đào tạo được sử dụng trong hệ thống.
-
----
-
-## 2. Tra cứu điểm chuẩn
-
-Chức năng cho phép người dùng tra cứu dữ liệu điểm chuẩn theo nhiều tiêu chí.
-
-Các bộ lọc gồm:
-
-* Năm tuyển sinh
-* Ngành
-* Hệ đào tạo
-* Phương thức xét tuyển
-* Tổ hợp
-* Khoảng điểm
-
-Dữ liệu được truy xuất từ **Cloud Firestore**.
-
-### Các năm dữ liệu
-
-Hệ thống hiện hỗ trợ dữ liệu tuyển sinh:
-
-```text
-2023
-2024
-2025
-2026
-```
-
-### Hệ đào tạo
-
-Hệ thống sử dụng các nhóm chương trình:
-
-* Chương trình chuẩn
-* Chương trình chuẩn quốc tế
-* Chương trình liên kết với nước ngoài
-
-### Tổ hợp
-
-Mã tổ hợp được hiển thị dưới dạng:
-
-```text
-A01
-C00
-D01
-D14
-...
-```
-
-Không thay thế mã tổ hợp bằng tên môn học.
-
-### In danh sách
-
-Người dùng có thể in danh sách kết quả tra cứu thông qua chức năng in của trình duyệt.
-
-Bản in được tối ưu để:
-
-* loại bỏ các thành phần điều hướng không cần thiết;
-* giữ lại bảng kết quả;
-* giữ tiêu đề cột;
-* phù hợp với giấy A4;
-* hỗ trợ danh sách nhiều trang.
-
----
-
-# 3. Định hướng ngành
-
-Chức năng định hướng ngành hỗ trợ người dùng khám phá mức độ phù hợp của bản thân với các ngành đào tạo.
-
-Hệ thống sử dụng nhóm tiêu chí liên quan đến:
-
-* Khả năng phân tích
-* Giao tiếp
-* Xã hội và con người
-* Ngôn ngữ
-* Sáng tạo
-* Tổ chức
-* Nghiên cứu
-* Quốc tế
-* Công nghệ và dữ liệu
-
-Người dùng trả lời các câu hỏi theo đặc điểm, sở thích, khả năng và cách làm việc của bản thân.
-
-Hệ thống sau đó xây dựng hồ sơ phù hợp và so sánh với đặc điểm của các ngành trong dữ liệu hệ thống.
-
-### Kết quả
-
-Kết quả được thể hiện dưới dạng mức độ phù hợp giữa người dùng và ngành học.
-
-Các ngành được tính toán độc lập dựa trên:
-
-```text
-Câu trả lời của người dùng
-        +
-Các tiêu chí của ngành
-        ↓
-Mức độ phù hợp
-```
-
-Kết quả nhằm hỗ trợ người dùng tham khảo trong quá trình tìm hiểu ngành học.
-
----
-
-# 4. Dự đoán trúng tuyển
-
-Chức năng Dự đoán trúng tuyển cho phép người dùng nhập thông tin điểm và tham khảo khả năng trúng tuyển theo dữ liệu được sử dụng trong hệ thống.
-
-Quy trình:
-
-```text
-Chọn ngành
-    ↓
-Chọn các thông tin xét tuyển
-    ↓
-Nhập điểm
-    ↓
-Tính điểm xét tuyển
-    ↓
-So sánh với dữ liệu điểm chuẩn tham chiếu
-    ↓
-Hiển thị kết quả tham khảo
-```
-
 ## Năm dự đoán
 
 Hệ thống hiện sử dụng:
