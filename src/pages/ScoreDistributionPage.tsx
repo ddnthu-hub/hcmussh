@@ -262,7 +262,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
             Phân bố điểm xét tuyển dự kiến của người dùng
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
-            Dữ liệu được tổng hợp từ các lượt dự báo thành công trên hệ thống.
+            Dữ liệu được tổng hợp từ các thiết bị đã dự báo thành công trên hệ thống.
           </p>
         </div>
 
@@ -354,7 +354,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
           </div>
 
           {/* Candidate Expected Score */}
-          <div className="bg-white/10 rounded-xl p-4 border border-white/20 text-center">
+          <div className="bg-white/10 rounded-xl p-4 border border-white/20 text-center md:col-start-4">
             <span className="text-xs text-blue-200 font-semibold block">Điểm xét tuyển dự kiến của bạn</span>
             <div className="text-3xl sm:text-4xl font-black text-amber-300 tracking-tight mt-0.5">
               {userScore.toFixed(2)}
@@ -365,16 +365,6 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
             </span>
           </div>
 
-          {/* Percentile Ranking */}
-          <div className="bg-white/10 rounded-xl p-4 border border-white/20 text-center">
-            <span className="text-xs text-blue-200 font-semibold block">Vị trí tương đối trong hệ thống</span>
-            <div className="text-3xl sm:text-4xl font-black text-emerald-300 tracking-tight mt-0.5">
-              {candidatePositionInfo ? `Top ${100 - candidatePositionInfo.percentile}%` : '—'}
-            </div>
-            <span className="text-[11px] text-blue-200 block mt-0.5">
-              {candidatePositionInfo ? `Cao hơn ${candidatePositionInfo.percentile}% lượt dự báo` : 'Chưa đủ dữ liệu đối chiếu'}
-            </span>
-          </div>
         </div>
       )}
 
@@ -428,20 +418,20 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                     <span>Thống kê điểm xét tuyển người dùng</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Dữ liệu được tổng hợp từ {stats.totalCount} lượt dự báo.
+                    Dữ liệu được tổng hợp từ {stats.totalCount} thiết bị.
                   </p>
                 </div>
 
                 {/* 5 Real Metrics from user scores */}
                 <div className="space-y-3">
-                  {/* Metric 1: Tổng số lượt dự báo */}
+                  {/* Metric 1: Số thiết bị */}
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
                       <Users className="w-4 h-4 text-blue-600" />
-                      <span>Tổng số lượt dự báo:</span>
+                      <span>Tổng số thiết bị:</span>
                     </div>
                     <span className="font-mono font-bold text-slate-900 text-sm">
-                      {stats.totalCount} lượt
+                      {stats.totalCount} thiết bị
                     </span>
                   </div>
 
@@ -498,7 +488,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                       <span>Vị trí điểm của bạn trong cộng đồng:</span>
                     </div>
                     <p className="leading-relaxed">
-                      Với mức điểm xét tuyển <strong>{userScore.toFixed(2)}/100</strong>, bạn thuộc khoảng điểm <strong>{userBucketRange}</strong> và cao hơn <strong>{candidatePositionInfo.percentile}%</strong> số lượt dự báo thành công đã ghi nhận trên hệ thống.
+                      Với mức điểm xét tuyển <strong>{userScore.toFixed(2)}/100</strong>, bạn thuộc khoảng điểm <strong>{userBucketRange}</strong> và cao hơn <strong>{candidatePositionInfo.percentile}%</strong> số thiết bị hợp lệ đã ghi nhận trên hệ thống.
                     </p>
                   </div>
                 )}
@@ -519,7 +509,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                     <span>Phân bố điểm xét tuyển dự kiến của người dùng</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Dữ liệu được tổng hợp từ {stats.totalCount} lượt dự báo. Cột màu vàng cam thể hiện khoảng điểm của bạn ({userScore.toFixed(2)}đ).
+                    Dữ liệu được tổng hợp từ {stats.totalCount} thiết bị. Cột màu vàng cam thể hiện khoảng điểm của bạn ({userScore.toFixed(2)}đ).
                   </p>
                 </div>
 
@@ -592,7 +582,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                                   Số người dùng: <strong>{data.userCount} người</strong> ({data.percentage}%)
                                 </div>
                                 <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-100">
-                                  Chiếm {data.percentage}% trên tổng số {stats.totalCount} lượt dự báo
+                                  Chiếm {data.percentage}% trên tổng số {stats.totalCount} thiết bị
                                 </div>
                               </div>
                             );
@@ -690,7 +680,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                   )}
                 </div>
                 <span className="text-[11px] text-slate-600 font-semibold bg-slate-100 px-2.5 py-1 rounded-md">
-                  Dữ liệu được tổng hợp từ {stats.totalCount} lượt dự báo.
+                  Dữ liệu được tổng hợp từ {stats.totalCount} thiết bị.
                 </span>
               </div>
             </div>

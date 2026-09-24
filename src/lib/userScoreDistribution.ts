@@ -29,8 +29,10 @@ export interface UserScoreRecord {
   userAdmissionScore: number;
   year: number;
   userId?: string;
+  deviceId?: string;
   scoreType?: 'real' | 'fake';
   isReal?: boolean;
+  source?: string;
   createdAt?: any;
   majorCode?: string;
   majorName?: string;
@@ -89,6 +91,26 @@ const CACHE_TTL_MS = 60000; // 60 giây
 // Chống ghi trùng: Lưu vết mã nhận diện lần lưu gần nhất trong phiên
 let lastSavedSignature: string | null = null;
 let isSavingInProgress = false;
+
+const DEVICE_ID_KEY = 'ussh_distribution_device_id';
+
+/** Returns the stable browser identifier used for community aggregation. */
+export function getDistributionDeviceId(): string {
+  if (typeof window === 'undefined') return 'server';
+
+  try {
+    const stored = window.localStorage.getItem(DEVICE_ID_KEY)?.trim();
+    if (stored) return stored;
+
+    const deviceId = typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    return deviceId;
+  } catch {
+    return 'local-browser';
+  }
+}
 
 /**
  * Kiểm tra người dùng đã hoàn thành dự báo trúng tuyển hay chưa
@@ -156,6 +178,7 @@ export async function saveUserScoreDistribution(params: {
 
   // 2. Chống ghi trùng: Nếu cùng một chữ ký hoặc đang trong quá trình ghi thì bỏ qua
   const roundedScore = Number(userAdmissionScore.toFixed(2));
+  const deviceId = getDistributionDeviceId();
   const firebaseUser = isFirebaseConfigured ? await ensurePublicUser() : null;
   const signature = uniqueKey || `${firebaseUser?.uid || 'local'}_${year}_${roundedScore}`;
 
@@ -185,6 +208,7 @@ export async function saveUserScoreDistribution(params: {
       userAdmissionScore: roundedScore,
       scoreType: 'real',
       isReal: true,
+      deviceId,
       source: 'user_prediction',
       year,
       majorCode: majorCode || '',
@@ -258,6 +282,8 @@ export async function getUserScoreDistribution(
       const isRealScore = String(data.scoreType || '').toLowerCase() === 'real'
         && data.isReal === true
         && data.source === 'user_prediction';
+      const deviceId = typeof data.deviceId === 'string' ? data.deviceId.trim() : '';
+      const userId = typeof data.userId === 'string' ? data.userId.trim() : '';
 
       if (
         typeof score === 'number' &&
@@ -265,16 +291,17 @@ export async function getUserScoreDistribution(
         score >= 0 &&
         score <= 100 &&
         isRealScore &&
-        typeof data.userId === 'string' &&
-        data.userId.trim().length > 0
+        (deviceId.length > 0 || userId.length > 0)
       ) {
         records.push({
           id: docSnap.id,
           userAdmissionScore: score,
           year: Number(data.year) || year,
-          userId: data.userId,
+          userId: userId || undefined,
+          deviceId: deviceId || undefined,
           scoreType: 'real',
           isReal: true,
+          source: data.source,
           createdAt: data.createdAt,
           majorCode: data.majorCode,
           majorName: data.majorName,
@@ -288,9 +315,10 @@ export async function getUserScoreDistribution(
       }
     });
 
-    cachedUserScores = records;
+    const latestRealScores = selectLatestRealScores(records);
+    cachedUserScores = latestRealScores;
     cachedTimestamp = now;
-    return records;
+    return latestRealScores;
   } catch (err) {
     console.error('[UserScoreDistribution] Lỗi truy vấn Firestore:', err);
     throw err;
@@ -309,8 +337,10 @@ export async function getManagedUserScoreDistribution(forceRefresh = false): Pro
         userAdmissionScore: Number(data.userAdmissionScore ?? data.score),
         year: Number(data.year),
         userId: data.userId,
+        deviceId: data.deviceId,
         scoreType: (data.scoreType === 'fake' ? 'fake' : 'real') as 'real' | 'fake',
         isReal: data.isReal !== false,
+        source: data.source,
         createdAt: data.createdAt,
         majorCode: data.majorCode,
         majorName: data.majorName,
@@ -388,6 +418,34 @@ export async function deleteManagedUserScoreDistribution(recordId: string): Prom
   cachedUserScores = null;
 }
 
+function getRecordTimestamp(record: UserScoreRecord): number {
+  const value = record.createdAt;
+  if (value && typeof value.toMillis === 'function') return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return Date.parse(value) || 0;
+  if (value && typeof value.seconds === 'number') return value.seconds * 1000 + (value.nanoseconds || 0) / 1e6;
+  return 0;
+}
+
+/** Keeps one latest REAL score per device; legacy rows use their UID as a fallback key. */
+export function selectLatestRealScores(records: UserScoreRecord[]): UserScoreRecord[] {
+  const latestByDevice = new Map<string, UserScoreRecord>();
+
+  for (const record of records) {
+    if (record.scoreType !== 'real' || record.isReal !== true) continue;
+    const deviceKey = record.deviceId?.trim() || record.userId?.trim();
+    if (!deviceKey) continue;
+
+    const current = latestByDevice.get(deviceKey);
+    if (!current || getRecordTimestamp(record) >= getRecordTimestamp(current)) {
+      latestByDevice.set(deviceKey, record);
+    }
+  }
+
+  return Array.from(latestByDevice.values());
+}
+
 /**
  * Tính toán phân bố điểm số (Histogram) từ mảng điểm số của người dùng.
  * Phân chia chính xác theo 8 khoảng điểm:
@@ -435,15 +493,7 @@ export function calculateScoreDistribution(scores: number[]): DistributionBucket
  * - Khoảng điểm có nhiều người dùng nhất
  */
 export function getValidDistributionUserCount(records: UserScoreRecord[]): number {
-  const uniqueUserIds = new Set<string>();
-
-  for (const record of records) {
-    if (record.userId) {
-      uniqueUserIds.add(record.userId);
-    }
-  }
-
-  return uniqueUserIds.size;
+  return selectLatestRealScores(records).length;
 }
 
 export function calculateUserScoreStatistics(scores: number[]): UserScoreStatistics {

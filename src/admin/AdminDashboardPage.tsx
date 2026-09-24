@@ -197,7 +197,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
                     : 'Chưa có dữ liệu'}
             </div>
             <span className="text-[10px] text-[#8f1d2c] font-medium">
-              {loadError || stats?.predictionsError ? 'Kiểm tra kết nối và quyền truy cập Firestore' : 'Lượt ghi nhận từ user_score_distribution'}
+              {loadError || stats?.predictionsError ? 'Kiểm tra kết nối và quyền truy cập Firestore' : 'Thiết bị ghi nhận từ user_score_distribution'}
             </span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-[#edf3fa] text-[var(--ussh-blue-dark)] flex items-center justify-center">

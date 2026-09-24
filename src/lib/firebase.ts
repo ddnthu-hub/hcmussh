@@ -853,14 +853,18 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   if (db && isFirebaseConfigured) {
     try {
       const predSnap = await getDocs(collection(db, 'user_score_distribution'));
-      totalPredictions = predSnap.docs.filter((prediction) => {
+      const deviceIds = new Set<string>();
+      predSnap.docs.forEach((prediction) => {
         const data = prediction.data();
-        return String(data.scoreType || '').toLowerCase() === 'real'
+        if (String(data.scoreType || '').toLowerCase() === 'real'
           && data.isReal === true
           && data.source === 'user_prediction'
-          && typeof data.userId === 'string'
-          && data.userId.trim().length > 0;
-      }).length;
+          && (typeof data.deviceId === 'string' || typeof data.userId === 'string')) {
+          const deviceId = typeof data.deviceId === 'string' ? data.deviceId.trim() : data.userId.trim();
+          if (deviceId) deviceIds.add(deviceId);
+        }
+      });
+      totalPredictions = deviceIds.size;
     } catch (err) {
       predictionsError = err instanceof Error ? err.message : String(err);
       console.error('Error loading prediction statistics:', err);
