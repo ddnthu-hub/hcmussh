@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getAdminMembers, getAuditLogs } from '../lib/firebase';
+import { getAdminMembers, getAuditLogs, resolveAuditActorName } from '../lib/firebase';
 import { AdminMemberDoc, AuditLogDoc } from '../types';
 import { Pagination } from '../components/Pagination';
 import { 
@@ -96,9 +96,14 @@ export const AdminAuditLogsPage: React.FC = () => {
       .replace(/^Cán bộ .*?\s+(đăng xuất khỏi hệ thống quản trị\.)$/i, '$1');
   };
 
-  const getActorName = (email: string) => {
-    const member = members.find((item) => item.email.trim().toLowerCase() === email.trim().toLowerCase());
-    return member?.name || email;
+  const isGenericActorName = (value?: string) => {
+    const name = (value || '').trim();
+    if (!name) return true;
+    return /^(cán bộ quản trị|quản trị viên|admin|editor|user|staff|employee)$/i.test(name);
+  };
+
+  const getActorName = (email: string, fallbackName?: string) => {
+    return resolveAuditActorName(email, fallbackName, members);
   };
 
   return (
@@ -203,11 +208,11 @@ export const AdminAuditLogsPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#f4f7fb] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                <th className="py-3 px-4 w-36">THỜI GIAN</th>
-                <th className="py-3 px-4 w-44">NGƯỜI THỰC HIỆN</th>
-                <th className="py-3 px-4 w-28 text-center">HÀNH ĐỘNG</th>
-                <th className="w-[55vw] min-w-[220px] py-3 px-4 lg:w-auto lg:min-w-0">CHI TIẾT THAO TÁC</th>
-                <th className="py-3 px-4 w-28 min-w-28 text-center whitespace-nowrap">TRẠNG THÁI</th>
+                <th className="py-3 px-4 w-36 whitespace-normal break-words">THỜI GIAN</th>
+                <th className="py-3 px-4 w-44 whitespace-normal break-words">NGƯỜI THỰC HIỆN</th>
+                <th className="py-3 px-4 w-28 text-center whitespace-normal break-words">HÀNH ĐỘNG</th>
+                <th className="w-[55vw] min-w-[220px] py-3 px-4 lg:w-auto lg:min-w-0 whitespace-normal break-words">CHI TIẾT THAO TÁC</th>
+                <th className="py-3 px-4 w-28 min-w-28 text-center whitespace-normal break-words">TRẠNG THÁI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -216,8 +221,8 @@ export const AdminAuditLogsPage: React.FC = () => {
                   <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
                     {new Date(log.timestamp).toLocaleString('vi-VN')}
                   </td>
-                  <td className="py-3 px-4 font-semibold text-slate-900 truncate max-w-[160px]">
-                    {getActorName(log.admin_email)}
+                  <td className="py-3 px-4 font-semibold text-slate-900 max-w-[160px] break-words leading-relaxed">
+                    {getActorName(log.admin_email, log.actor_name)}
                   </td>
                   <td className="py-3 px-4 text-center">{getActionBadge(log.action)}</td>
                   <td className="w-[55vw] min-w-[220px] py-3 px-4 text-slate-700 break-words lg:w-auto lg:min-w-0">

@@ -1840,9 +1840,13 @@ export function calculateMajorFit(
     const uScore = userProfile[key] ?? 50;
     const mScore = majorProfile.profile[key] ?? 50;
     const difference = Math.abs(uScore - mScore);
-    // A mild contrast calibration prevents every middle/high profile from
-    // clustering near 90 while preserving weighted-similarity semantics.
-    const similarity = Math.max(0, Math.min(100, 100 - difference * 1.35));
+    // Previous linear calibration compressed the distribution too aggressively:
+    // most majors ended up with very similar scores because a modest gap still
+    // produced a high similarity value. A non-linear fit curve keeps high-match
+    // criteria strong, while mismatches are penalized more sharply so the ranking
+    // remains distinguishable across the full 42-major set.
+    const rawGapRatio = difference / 100;
+    const similarity = Math.max(0, 100 * (1 - Math.pow(rawGapRatio, 1.65)));
     const normalizedWeight = (majorProfile.weights[key] || 0) / totalWeight;
     const weightedContribution = similarity * normalizedWeight;
 

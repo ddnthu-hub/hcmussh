@@ -75,6 +75,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const visibleNavItems = navItems.filter((item) => {
     if (item.tab === 'admin-members' || item.tab === 'admin-settings') return currentAdminRole === 'superadmin';
     if (item.tab === 'admin-import') return currentAdminRole === 'superadmin' || currentAdminRole === 'admin';
+    if (item.tab === 'admin-messages') return currentAdminRole === 'superadmin';
     return true;
   });
 

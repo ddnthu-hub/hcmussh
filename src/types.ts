@@ -231,6 +231,7 @@ export type AuditActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'LOGIN
 export interface AuditLogDoc {
   id: string;
   admin_email: string;
+  actor_name?: string;
   action: AuditActionType;
   collection_name: string;
   document_id: string;

@@ -64,6 +64,30 @@ if (isFirebaseConfigured) {
 
 export { auth };
 
+const AUDIT_LOGS_STORAGE_KEY = 'ussh_audit_logs_cache_v1';
+const normalizeAuditEmail = (email: string): string => String(email || '').trim().toLowerCase();
+
+function loadCachedAuditLogs(): AuditLogDoc[] {
+  try {
+    const cached = localStorage.getItem(AUDIT_LOGS_STORAGE_KEY);
+    if (!cached) return [];
+    const parsed = JSON.parse(cached);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => item && typeof item === 'object' && item.id && item.admin_email);
+  } catch (err) {
+    console.warn('Could not load cached audit logs:', err);
+    return [];
+  }
+}
+
+function saveCachedAuditLogs(logs: AuditLogDoc[]): void {
+  try {
+    localStorage.setItem(AUDIT_LOGS_STORAGE_KEY, JSON.stringify(logs.slice(0, 500)));
+  } catch (err) {
+    console.warn('Could not save cached audit logs:', err);
+  }
+}
+
 export async function addAdminMember(params: { email: string; name: string; password: string; role: 'admin' | 'editor' }): Promise<void> {
   if (!auth?.currentUser) throw new Error('Vui lòng đăng nhập lại tài khoản Super Admin.');
   const token = await auth.currentUser.getIdToken();
@@ -568,57 +592,74 @@ export async function batchImportAdmissionScores(
 // AUDIT LOGS MANAGEMENT
 // ============================================================================
 
-let memoryAuditLogs: AuditLogDoc[] = [
-  {
-    id: 'log_init_01',
-    admin_email: 'vovanthu25122000@gmail.com',
-    action: 'LOGIN',
-    collection_name: 'admins',
-    document_id: 'vovanthu25122000@gmail.com',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    details: 'Đăng nhập hệ thống quản trị USSH thành công',
-    status: 'SUCCESS',
-  },
-  {
-    id: 'log_init_02',
-    admin_email: 'vovanthu25122000@gmail.com',
-    action: 'UPDATE',
-    collection_name: 'admission_scores',
-    document_id: 'score_2026_init',
-    timestamp: new Date(Date.now() - 1800000).toISOString(),
-    details: 'Cập nhật bảng điểm chuẩn tuyển sinh chính thức năm 2026',
-    status: 'SUCCESS',
-  },
-];
+let memoryAuditLogs: AuditLogDoc[] = [];
+
+export const isGenericAuditActorName = (value?: string): boolean => {
+  const name = String(value || '').trim();
+  if (!name) return true;
+  return /^(cán bộ quản trị|quản trị viên|admin|editor|user|staff|employee)$/i.test(name);
+};
+
+export const resolveAuditActorName = (email: string, fallbackName?: string, members: AdminMemberDoc[] = []): string => {
+  const normalizedEmail = normalizeAuditEmail(email);
+
+  if (!normalizedEmail) {
+    return fallbackName || email || 'Không xác định';
+  }
+
+  const member = members.find((item) => normalizeAuditEmail(item.email) === normalizedEmail);
+  const memberName = member?.name?.trim();
+
+  if (memberName && (!fallbackName || isGenericAuditActorName(fallbackName) || memberName !== fallbackName)) {
+    return memberName;
+  }
+
+  if (fallbackName && !isGenericAuditActorName(fallbackName)) {
+    return fallbackName;
+  }
+
+  return memberName || fallbackName || normalizedEmail;
+};
 
 export async function getAuditLogs(): Promise<AuditLogDoc[]> {
   if (db && isFirebaseConfigured) {
     try {
-      const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(100));
+      const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(200));
       const snap = await getDocs(q);
       if (!snap.empty) {
-        return snap.docs.map((d) => ({
+        const allLogs = snap.docs.map((d) => ({
           ...(d.data() as AuditLogDoc),
           id: d.id,
+          admin_email: normalizeAuditEmail((d.data() as AuditLogDoc).admin_email || ''),
         }));
+        saveCachedAuditLogs(allLogs);
+        return allLogs;
       }
     } catch (err) {
       console.warn('Firestore read notice (audit_logs):', err);
     }
   }
-  return memoryAuditLogs;
+
+  const cached = loadCachedAuditLogs();
+  memoryAuditLogs = cached;
+  return cached;
 }
 
 export async function createAuditLog(entry: Omit<AuditLogDoc, 'id' | 'timestamp'>): Promise<void> {
   const randSuffix = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : `${Date.now().toString(36)}`;
   const docId = `audit_${Date.now()}_${randSuffix}`;
+  const normalizedEmail = normalizeAuditEmail(entry.admin_email || '');
   const log: AuditLogDoc = {
     ...entry,
+    admin_email: normalizedEmail,
+    actor_name: (entry as any).actor_name || entry.actor_name || undefined,
     id: docId,
     timestamp: new Date().toISOString(),
   };
 
-  memoryAuditLogs = [log, ...memoryAuditLogs.slice(0, 199)];
+  const nextLogs = [log, ...memoryAuditLogs.filter((item) => item.id !== log.id)].slice(0, 500);
+  memoryAuditLogs = nextLogs;
+  saveCachedAuditLogs(nextLogs);
 
   if (db && isFirebaseConfigured) {
     try {
@@ -637,7 +678,7 @@ let memoryMembers: AdminMemberDoc[] = [
   {
     id: 'admin_01',
     email: 'vovanthu25122000@gmail.com',
-    name: 'Võ Văn Thư (Superadmin)',
+    name: 'Võ Thị Vân Thư (Superadmin)',
     role: 'superadmin',
     status: 'active',
     created_at: '2026-01-10T08:00:00Z',
@@ -661,48 +702,118 @@ let memoryMembers: AdminMemberDoc[] = [
     created_at: '2026-03-05T11:00:00Z',
     last_login: '2026-09-12T10:15:00Z',
   },
+  {
+    id: 'admin_04',
+    email: 'skksyuu@gmail.com',
+    name: 'Nhân Văn',
+    role: 'editor',
+    status: 'active',
+    created_at: '2026-09-24T00:00:00Z',
+    last_login: new Date().toISOString(),
+  },
 ];
 
+const isGenericAdminName = (name?: string): boolean => {
+  const value = String(name || '').trim();
+  if (!value) return true;
+  return /^(cán bộ quản trị|quản trị viên|admin|editor|user|staff|employee)$/i.test(value);
+};
+
+const pickBestAdminMember = (current: AdminMemberDoc | null | undefined, candidate: AdminMemberDoc | null | undefined): AdminMemberDoc | null => {
+  if (!current && !candidate) return null;
+  if (!current) return candidate || null;
+  if (!candidate) return current;
+
+  const currentScore = (() => {
+    let score = 0;
+    if (current.status === 'active') score += 40;
+    if (current.status === 'pending') score += 10;
+    if (current.role === 'superadmin') score += 15;
+    if (!isGenericAdminName(current.name)) score += 30;
+    if (current.name && current.name.length > 4) score += 5;
+    return score;
+  })();
+
+  const candidateScore = (() => {
+    let score = 0;
+    if (candidate.status === 'active') score += 40;
+    if (candidate.status === 'pending') score += 10;
+    if (candidate.role === 'superadmin') score += 15;
+    if (!isGenericAdminName(candidate.name)) score += 30;
+    if (candidate.name && candidate.name.length > 4) score += 5;
+    return score;
+  })();
+
+  return candidateScore > currentScore ? candidate : current;
+};
+
 export async function getAdminMembers(): Promise<AdminMemberDoc[]> {
+  const map = new Map<string, AdminMemberDoc>();
+
+  const addMembersFromCollection = (collectionName: string) => {
+    if (!db || !isFirebaseConfigured) return;
+    return getDocs(collection(db, collectionName)).then((snap) => {
+      snap.docs.forEach((d) => {
+        const member = { ...(d.data() as AdminMemberDoc), id: d.id } as AdminMemberDoc;
+        const emailKey = normalizeAuditEmail(member.email || '');
+        if (!emailKey) return;
+        const existing = map.get(emailKey);
+        map.set(emailKey, pickBestAdminMember(existing, member) || member);
+      });
+    });
+  };
+
   if (db && isFirebaseConfigured) {
     try {
-      const snap = await getDocs(collection(db, 'admins'));
-      if (!snap.empty) {
-        return snap.docs.map((d) => ({
-          ...(d.data() as AdminMemberDoc),
-          id: d.id,
-        }));
+      await Promise.all([
+        addMembersFromCollection('admins'),
+        addMembersFromCollection('admin_members'),
+      ]);
+      if (map.size > 0) {
+        return Array.from(map.values());
       }
     } catch (err) {
       console.warn('Firestore read notice (admins):', err);
     }
   }
-  return memoryMembers;
+
+  memoryMembers.forEach((member) => {
+    const emailKey = normalizeAuditEmail(member.email || '');
+    if (emailKey) map.set(emailKey, member);
+  });
+  return Array.from(map.values());
 }
 
 export async function findAdminMemberByEmail(email: string): Promise<AdminMemberDoc | null> {
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeAuditEmail(email);
   if (!normalizedEmail) return null;
+
+  let bestMatch: AdminMemberDoc | null = null;
 
   if (db && isFirebaseConfigured) {
     try {
-      const q = query(collection(db, 'admins'), where('email', '==', normalizedEmail));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const docSnap = snap.docs[0];
-        return {
-          ...(docSnap.data() as AdminMemberDoc),
-          id: docSnap.id,
-        };
+      const collectionsToCheck = ['admins', 'admin_members'];
+      for (const collectionName of collectionsToCheck) {
+        const q = query(collection(db, collectionName), where('email', '==', normalizedEmail));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          for (const docSnap of snap.docs) {
+            const member = {
+              ...(docSnap.data() as AdminMemberDoc),
+              id: docSnap.id,
+            } as AdminMemberDoc;
+            bestMatch = pickBestAdminMember(bestMatch, member) || member;
+          }
+        }
       }
+      if (bestMatch) return bestMatch;
     } catch (err) {
       console.warn('Firestore query notice (admin by email):', err);
     }
   }
 
-  // Fallback to local memory / predefined members
-  const member = memoryMembers.find((m) => m.email.toLowerCase() === normalizedEmail);
-  return member || null;
+  const member = memoryMembers.find((m) => normalizeAuditEmail(m.email) === normalizedEmail);
+  return member ? pickBestAdminMember(bestMatch, member) || member : null;
 }
 
 export async function ensureAdminMemberRecordForUser(params: { uid: string; email: string; name?: string }): Promise<AdminMemberDoc | null> {
@@ -710,10 +821,44 @@ export async function ensureAdminMemberRecordForUser(params: { uid: string; emai
   if (!email || !params.uid) return null;
 
   const existing = await findAdminMemberByEmail(email);
-  if (existing) return existing;
+  if (existing) {
+    const canonicalId = params.uid;
+    const normalizedExisting = {
+      ...existing,
+      uid: existing.uid || params.uid,
+      id: existing.id && existing.id !== canonicalId ? canonicalId : existing.id || canonicalId,
+      name: existing.name || params.name || email.split('@')[0],
+      email,
+      status: existing.status || 'pending',
+      role: existing.role || 'editor',
+      last_login: new Date().toISOString(),
+    } as AdminMemberDoc;
+
+    const shouldRefreshName = params.name && isGenericAdminName(existing.name);
+    if (shouldRefreshName || normalizedExisting.id !== existing.id) {
+      const updated = { ...normalizedExisting, name: params.name || normalizedExisting.name, last_login: new Date().toISOString() };
+      memoryMembers = memoryMembers.map((member) => normalizeAuditEmail(member.email) === email ? updated : member);
+      if (db && isFirebaseConfigured) {
+        try {
+          await setDoc(doc(db, 'admins', params.uid), updated);
+          if (existing.id && existing.id !== params.uid) {
+            try {
+              await deleteDoc(doc(db, 'admins', existing.id));
+            } catch (deleteErr) {
+              console.warn('Firestore cleanup notice (legacy admin doc):', deleteErr);
+            }
+          }
+        } catch (err) {
+          console.warn('Firestore update notice (admin name refresh):', err);
+        }
+      }
+      return updated;
+    }
+    return existing;
+  }
 
   const placeholder: AdminMemberDoc = {
-    id: `admin_${params.uid}`,
+    id: params.uid,
     uid: params.uid,
     email,
     name: params.name || email.split('@')[0],
@@ -725,14 +870,14 @@ export async function ensureAdminMemberRecordForUser(params: { uid: string; emai
 
   if (db && isFirebaseConfigured) {
     try {
-      await setDoc(doc(db, 'admins', placeholder.id), placeholder);
+      await setDoc(doc(db, 'admins', params.uid), placeholder);
       return placeholder;
     } catch (err) {
       console.warn('Firestore create notice (admin from auth user):', err);
     }
   }
 
-  memoryMembers = [placeholder, ...memoryMembers.filter((m) => m.email.toLowerCase() !== email)];
+  memoryMembers = [placeholder, ...memoryMembers.filter((m) => normalizeAuditEmail(m.email) !== email)];
   return placeholder;
 }
 
@@ -748,7 +893,8 @@ export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAd
     throw new Error('Không thể thay đổi email hoặc trạng thái của Super Admin duy nhất.');
   }
   const payload: AdminMemberDoc = {
-    id: docId,
+    id: member.uid || docId,
+    uid: member.uid || undefined,
     email: String(member.email || '').trim().toLowerCase(),
     name: String(member.name || 'Cán bộ quản trị'),
     role: (normalizedRole === 'super_admin' ? (member.role as AdminRole) : normalizedRole) as AdminRole,
@@ -758,12 +904,13 @@ export async function saveAdminMember(member: Partial<AdminMemberDoc>, currentAd
   };
 
   memoryMembers = isNew 
-    ? [payload, ...memoryMembers]
-    : memoryMembers.map((m) => m.id === docId ? payload : m);
+    ? [payload, ...memoryMembers.filter((m) => normalizeAuditEmail(m.email) !== payload.email)]
+    : memoryMembers.map((m) => m.id === docId || (m.email && normalizeAuditEmail(m.email) === payload.email) ? payload : m);
 
   if (db && isFirebaseConfigured) {
     try {
-      await setDoc(doc(db, 'admins', docId), payload);
+      const documentId = payload.uid || payload.id || docId;
+      await setDoc(doc(db, 'admins', documentId), payload);
     } catch (err) {
       console.warn('Firestore write notice (admins):', err);
     }

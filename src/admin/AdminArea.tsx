@@ -65,7 +65,7 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
     return <AccessDeniedPage />;
   }
 
-  const isSuperadminOnlyRoute = subRoute === 'members' || subRoute === 'settings';
+  const isSuperadminOnlyRoute = subRoute === 'members' || subRoute === 'settings' || subRoute === 'messages';
   const canAccessImport = adminRole === 'superadmin' || adminRole === 'admin';
   if (isSuperadminOnlyRoute && adminRole !== 'superadmin') {
     return <AccessDeniedPage />;
@@ -102,7 +102,7 @@ export const AdminArea: React.FC<AdminAreaProps> = ({ subRoute }) => {
       onGoToPublic={handleGoToPublic}
     >
       {subRoute === 'dashboard' && (
-        <AdminDashboardPage onSelectTab={handleSelectTab} />
+        <AdminDashboardPage onSelectTab={handleSelectTab} currentAdminRole={adminRole} />
       )}
       {subRoute === 'scores' && (
         <AdminScoresPage

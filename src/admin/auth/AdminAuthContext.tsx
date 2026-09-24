@@ -205,6 +205,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       await createAuditLog({
         admin_email: normalizedMember.email,
+        actor_name: normalizedMember.name,
         action: 'LOGIN',
         collection_name: 'admins',
         document_id: normalizedMember.id,
@@ -234,6 +235,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         await createAuditLog({
           admin_email: adminUser.email,
+          actor_name: adminUser.name,
           action: 'LOGIN',
           collection_name: 'admins',
           document_id: adminUser.id,

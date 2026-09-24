@@ -5,28 +5,24 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isActiveAdminMember(member) {
+      return member != null
+        && member.status == 'active'
+        && member.role in ['superadmin', 'super_admin', 'admin', 'editor'];
+    }
+
     function activeAdminMemberForCurrentUser() {
       return isSignedIn() && (
-        (
-          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
-        )
-        || (
-          exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
-          && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
-        )
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && isActiveAdminMember(get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
       );
     }
 
     function currentAdminRole() {
-      if (!isSignedIn()) return null;
-      if (exists(/databases/$(database)/documents/admins/$(request.auth.uid))) {
-        return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
-      }
-      if (exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))) {
-        return get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role;
-      }
-      return null;
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+      );
     }
 
     // The current deployment identifies the single Super Admin by the existing
@@ -36,16 +32,9 @@ service cloud.firestore {
         && (
           request.auth.token.email == 'vovanthu25122000@gmail.com'
           || (
-            (
-              exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['superadmin', 'super_admin']
-              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
-            )
-            || (
-              exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
-              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role in ['superadmin', 'super_admin']
-              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
-            )
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['superadmin', 'super_admin']
+            && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
           )
         );
     }
@@ -72,22 +61,23 @@ service cloud.firestore {
             'tuyensinh.ussh@vnuhcm.edu.vn'
           ]
           || (
-            (
-              exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin', 'super_admin']
-              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
-            )
-            || (
-              exists(/databases/$(database)/documents/admins/admin_$(request.auth.uid))
-              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.role in ['admin', 'superadmin', 'super_admin']
-              && get(/databases/$(database)/documents/admins/admin_$(request.auth.uid)).data.status == 'active'
-            )
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin', 'super_admin']
+            && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
           )
         );
     }
 
     function isSuperAdminRole(role) {
       return role == 'superadmin' || role == 'super_admin';
+    }
+
+    function isActiveAdminForUserMessages() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active'
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['superadmin', 'super_admin', 'admin', 'editor']
+      );
     }
 
     // admission_scores: Public read access for applicants, students, and counselors
@@ -118,12 +108,13 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.userId == request.auth.uid
                     && request.resource.data.status == 'unanswered';
-      allow read: if isSignedIn()
-        && (resource.data.userId == request.auth.uid || isStaff());
-      allow update: if isStaff()
-            || (request.auth != null
-            && resource.data.userId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'answerReadAt']));
+      allow read: if request.auth != null
+        && (resource.data.userId == request.auth.uid || isActiveAdminForUserMessages());
+      allow update: if request.auth != null && (
+        (resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt', 'answerReadAt']))
+        || isActiveAdminForUserMessages()
+      );
       allow delete: if isAdmin();
     }
 

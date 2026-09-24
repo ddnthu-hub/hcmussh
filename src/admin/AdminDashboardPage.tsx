@@ -4,9 +4,10 @@ import {
   DashboardStats, 
   getAdmissionScores,
   getAuditLogs,
-  getAdminMembers
+  getAdminMembers,
+  resolveAuditActorName
 } from '../lib/firebase';
-import { AdminMemberDoc, AuditLogDoc, NavigationTab } from '../types';
+import { AdminMemberDoc, AuditLogDoc, NavigationTab, AdminRole } from '../types';
 import { normalizeOrientationMajorCode } from '../data/orientationData';
 import { 
   FileSpreadsheet, 
@@ -32,9 +33,10 @@ import {
 
 interface AdminDashboardPageProps {
   onSelectTab: (tab: NavigationTab) => void;
+  currentAdminRole?: AdminRole;
 }
 
-export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelectTab }) => {
+export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelectTab, currentAdminRole = 'superadmin' }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentLogs, setRecentLogs] = useState<AuditLogDoc[]>([]);
   const [adminMembers, setAdminMembers] = useState<AdminMemberDoc[]>([]);
@@ -73,8 +75,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
   }, []);
 
   const getActorName = (email: string) => {
-    const member = adminMembers.find((item) => item.email.trim().toLowerCase() === email.trim().toLowerCase());
-    return member?.name || email;
+    return resolveAuditActorName(email, undefined, adminMembers);
   };
 
   return (
@@ -217,7 +218,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div 
           onClick={() => onSelectTab('admin-scores')}
-          className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
+          className={`bg-white p-4 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between ${
+            currentAdminRole !== 'superadmin' && currentAdminRole !== 'admin' ? 'md:col-span-2' : ''
+          }`}
         >
           <div className="space-y-1">
             <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">Quản lý điểm chuẩn</h3>
@@ -226,21 +229,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onSelect
           <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
         </div>
 
-        <div 
-          onClick={() => onSelectTab('admin-import')}
-          className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
-        >
-          <div className="space-y-1">
-            <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">Nhập dữ liệu Excel/CSV</h3>
-            <p className="text-xs text-slate-500">Tải lên file, preview, validate lỗi chi tiết và import</p>
+        {(currentAdminRole === 'superadmin' || currentAdminRole === 'admin') && (
+          <div 
+            onClick={() => onSelectTab('admin-import')}
+            className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
+          >
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-[var(--ussh-blue-dark)]">Nhập dữ liệu Excel/CSV</h3>
+              <p className="text-xs text-slate-500">Tải lên file, preview, validate lỗi chi tiết và import</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
           </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-        </div>
-
-      </div>
-
-      {/* Recent Audit Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        )}
         {/* Recent Audit Activity */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
