@@ -8,7 +8,7 @@ Website hỗ trợ thí sinh tìm hiểu thông tin tuyển sinh, tra cứu đi�
 
 ## 🌐 Demo
 
-**Website:** https://usshwebsite.vercel.app
+**Website:** https://hcmussh.vercel.app
 
 ---
 
