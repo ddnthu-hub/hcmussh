@@ -1,4 +1,3 @@
-:::writing{variant="document" id="91584"}
 # HỆ THỐNG HỖ TRỢ TRA CỨU, ĐỊNH HƯỚNG NGÀNH VÀ DỰ ĐOÁN TUYỂN SINH USSH
 
 Website hỗ trợ thí sinh tìm hiểu thông tin tuyển sinh, tra cứu điểm chuẩn, khám phá ngành học phù hợp và tham khảo khả năng trúng tuyển dựa trên dữ liệu tuyển sinh được sử dụng trong hệ thống.
