@@ -32,17 +32,10 @@ Nhập điểm / dự đoán
 Xem mục tiêu điểm
         ↓
 Tham khảo phân bố điểm
-## Năm dự đoán
-
-Hệ thống hiện sử dụng:
-
-```text
-Năm dự đoán: 2027
-```
 
 Dữ liệu tuyển sinh năm 2026 được sử dụng làm dữ liệu tham chiếu khi phù hợp.
 
-Điểm tham chiếu 2026 **không được xem là điểm chuẩn chính thức của năm 2027**.
+Điểm tham chiếu 2026 không được xem là điểm chuẩn chính thức của năm 2027.
 
 ---
 
