@@ -410,7 +410,7 @@ Các chức năng:
 * Mục tiêu điểm
 * Phân bố điểm
 
-được xây dựng nhằm **hỗ trợ tham khảo**.
+được xây dựng nhằm hỗ trợ tham khảo.
 
 Kết quả không phải là:
 
@@ -437,26 +437,9 @@ Cam kết trúng tuyển
 
 Khu đô thị ĐHQG-HCM, P. Linh Xuân, TP. HCM
 
-### Liên hệ
-
-Điện thoại:
-
-```text
-1900 3033
-+84 28 3829 3828
-```
-
-Email:
-
-```text
-hcth@hcmussh.edu.vn
-```
-
----
-
 # 20. Mục đích xây dựng
 
-Website được xây dựng trong khuôn khổ **sản phẩm thực tập**, tập trung vào việc ứng dụng kiến thức về:
+Website được xây dựng tập trung vào việc ứng dụng kiến thức về:
 
 * Phân tích dữ liệu
 * Phát triển ứng dụng web
@@ -467,12 +450,6 @@ Website được xây dựng trong khuôn khổ **sản phẩm thực tập**, t
 * Thiết kế giao diện người dùng
 
 Sản phẩm hướng tới việc xây dựng một công cụ hỗ trợ thí sinh tiếp cận dữ liệu tuyển sinh theo cách trực quan và thuận tiện hơn.
-
----
-
-## Trạng thái dự án
-
-**Đang hoàn thiện / sử dụng cho mục đích trình bày và đánh giá sản phẩm thực tập.**
 
 ---
 
