@@ -437,7 +437,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
 
                 {/* 5 Real Metrics from user scores */}
                 <div className="space-y-3">
-                  {/* Metric 1: Số thiết bị */}
+                  {/* Metric 1: Số người dùng */}
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
                       <Users className="w-4 h-4 text-blue-600" />
@@ -592,10 +592,10 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                                   )}
                                 </div>
                                 <div className="text-slate-700">
-                                  Số thiết bị: <strong>{data.userCount} thiết bị</strong> ({data.percentage}%)
+                                  Số người dùng: <strong>{data.userCount} thiết bị</strong> ({data.percentage}%)
                                 </div>
                                 <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-100">
-                                  Chiếm {data.percentage}% trên tổng số {stats.totalCount} thiết bị
+                                  Chiếm {data.percentage}% trên tổng số {stats.totalCount} người dùng
                                 </div>
                               </div>
                             );
@@ -717,7 +717,7 @@ export const ScoreDistributionPage: React.FC<ScoreDistributionPageProps> = ({
                 <div className="flex flex-col items-start gap-2">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-sm bg-[#0f2b5c] inline-block"></span>
-                    <span>Số thiết bị trong khoảng</span>
+                    <span>Số người dùng trong khoảng</span>
                   </div>
                   {userBucketRange && (
                     <div className="flex items-center gap-1.5">

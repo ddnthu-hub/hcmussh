@@ -558,8 +558,8 @@ const LEGACY_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 13,
     weight: 1,
     text: 'Bạn cảm thấy tự hào và trọn vẹn nhất sau khi hoàn thành loại sản phẩm nào?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 thành quả mang lại cho bạn cảm giác thành công nhất',
+    maxSelect: 3,
+    hint: 'Chọn tối đa 3 thành quả mang lại cho bạn cảm giác thành công nhất; nếu chưa chắc chắn, chọn ít hơn.',
     options: [
       {
         id: 'q13_opt1',
@@ -597,8 +597,8 @@ const LEGACY_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 14,
     weight: 1,
     text: 'Xu hướng thời đại nào bạn muốn nắm bắt và đóng góp giải pháp nhất trong nghề nghiệp?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 xu hướng',
+    maxSelect: 3,
+    hint: 'Chọn tối đa 3 xu hướng; nếu chưa chắc chắn, chọn ít hơn.',
     options: [
       {
         id: 'q14_opt1',
@@ -636,8 +636,8 @@ const LEGACY_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 15,
     weight: 1,
     text: 'Sau 5 đến 10 năm nữa, hình mẫu nghề nghiệp nào mang lại cho bạn sự tự hào lớn nhất?',
-    maxSelect: 1,
-    hint: 'Chọn 1 hình mẫu bạn hướng đến nhất',
+    maxSelect: 3,
+    hint: 'Chọn tối đa 3 hình mẫu bạn hướng đến nhất; nếu chưa cảm thấy phù hợp, có thể chọn ít hơn.',
     options: [
       {
         id: 'q15_opt1',
@@ -686,14 +686,32 @@ const orientationProfile = (values: Partial<CriteriaProfile>): CriteriaProfile =
   ...values,
 });
 
+const LEGACY_MAX_SELECTION_BY_QUESTION: Record<number, number> = {
+  1: 3,
+  2: 2,
+  3: 3,
+  4: 3,
+  5: 2,
+  6: 3,
+  7: 3,
+  8: 3,
+  9: 3,
+  10: 3,
+  11: 2,
+  12: 2,
+  13: 3,
+  14: 3,
+  15: 3,
+};
+
 /** Câu hỏi ngắn, dựa trên hành vi và sở thích để học sinh trả lời tự nhiên. */
 const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
   {
     id: 1,
     weight: 1,
     text: 'Khi có thời gian rảnh, bạn thường muốn làm gì nhất?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 hoạt động gần với bạn nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[1] ?? 3,
+    hint: 'Chọn tối đa 3 hoạt động gần với bạn nhất; nếu thấy chưa phù hợp, bạn có thể chọn ít hơn.',
     options: [
       { id: 'q1_opt1', label: 'Viết, quay hoặc làm một nội dung để chia sẻ với mọi người', profile: orientationProfile({ communication: 4, creativity: 5, technologyData: 3, language: 2 }) },
       { id: 'q1_opt2', label: 'Đọc, xem và tìm hiểu vì sao một vấn đề xảy ra', profile: orientationProfile({ analysis: 4, research: 5, socialHuman: 3 }) },
@@ -707,8 +725,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 2,
     weight: 1,
     text: 'Khi làm bài tập nhóm, bạn thường thích nhận phần nào?',
-    maxSelect: 1,
-    hint: 'Chọn 1 vai trò bạn thấy tự nhiên nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[2] ?? 2,
+    hint: 'Chọn 1 hoặc 2 vai trò bạn thấy tự nhiên nhất; nếu cần, chọn ít hơn.',
     options: [
       { id: 'q2_opt1', label: 'Nghĩ ý tưởng và trình bày cho cả nhóm', profile: orientationProfile({ communication: 5, creativity: 4, language: 3 }) },
       { id: 'q2_opt2', label: 'Tìm thông tin, so sánh các nguồn và rút ra ý chính', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 3 }) },
@@ -722,8 +740,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 3,
     weight: 1,
     text: 'Khi gặp một chủ đề mình chưa biết, bạn thường bắt đầu bằng cách nào?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 cách bạn hay làm nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[3] ?? 3,
+    hint: 'Chọn tối đa 3 cách bạn hay làm nhất; nếu không hoàn toàn phù hợp, có thể chọn ít hơn.',
     options: [
       { id: 'q3_opt1', label: 'Tự tìm tài liệu rồi đọc để hiểu từ đầu đến cuối', profile: orientationProfile({ research: 5, analysis: 4, language: 2 }) },
       { id: 'q3_opt2', label: 'Hỏi người khác và trao đổi để nhìn vấn đề rõ hơn', profile: orientationProfile({ communication: 5, socialHuman: 4, international: 2 }) },
@@ -736,8 +754,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 4,
     weight: 1,
     text: 'Bạn thường chú ý đến loại nội dung nào hơn?',
-    maxSelect: 3,
-    hint: 'Chọn tối đa 3 chủ đề bạn hay quan tâm',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[4] ?? 3,
+    hint: 'Chọn tối đa 3 chủ đề bạn hay quan tâm; nếu chưa chắc chắn, chọn ít hơn.',
     options: [
       { id: 'q4_opt1', label: 'Câu chuyện về con người, trường học và đời sống xã hội', profile: orientationProfile({ socialHuman: 5, communication: 3, research: 3 }) },
       { id: 'q4_opt2', label: 'Lịch sử, văn hóa, sách và những câu chuyện của các vùng đất', profile: orientationProfile({ research: 5, language: 4, socialHuman: 3 }) },
@@ -751,8 +769,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 5,
     weight: 1,
     text: 'Bạn thấy mình mạnh hơn ở điểm nào?',
-    maxSelect: 1,
-    hint: 'Chọn 1 điểm bạn tự tin nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[5] ?? 2,
+    hint: 'Chọn 1 hoặc 2 điểm bạn tự tin nhất; nếu chưa chắc chắn, chọn ít hơn.',
     options: [
       { id: 'q5_opt1', label: 'Viết hoặc nói sao cho người khác dễ hiểu', profile: orientationProfile({ communication: 5, language: 4, creativity: 3 }) },
       { id: 'q5_opt2', label: 'Tìm quy luật, phân tích thông tin và đặt câu hỏi', profile: orientationProfile({ analysis: 5, research: 4, technologyData: 3 }) },
@@ -764,8 +782,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 6,
     weight: 1,
     text: 'Nếu được giao chuẩn bị một hoạt động ở trường, bạn muốn làm phần nào nhất?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 phần việc khiến bạn thấy hứng thú',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[6] ?? 3,
+    hint: 'Chọn tối đa 3 phần việc khiến bạn thấy hứng thú; nếu chậm hơn, chọn ít hơn.',
     options: [
       { id: 'q6_opt1', label: 'Lên ý tưởng, viết nội dung hoặc kể câu chuyện của hoạt động', profile: orientationProfile({ communication: 4, creativity: 5, language: 3 }) },
       { id: 'q6_opt2', label: 'Lập kế hoạch, chuẩn bị nhân sự và sắp xếp từng việc', profile: orientationProfile({ organization: 5, analysis: 3, communication: 3 }) },
@@ -778,8 +796,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 7,
     weight: 1,
     text: 'Khi đọc một bài viết có nhiều ý kiến khác nhau, bạn muốn làm gì?',
-    maxSelect: 2,
-    hint: 'Chọn tối đa 2 phản xạ gần với bạn nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[7] ?? 3,
+    hint: 'Chọn tối đa 3 phản xạ gần với bạn nhất; nếu không hoàn toàn phù hợp, chọn ít hơn.',
     options: [
       { id: 'q7_opt1', label: 'Tìm nguồn khác để kiểm tra thông tin', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 2 }) },
       { id: 'q7_opt2', label: 'Đặt mình vào vị trí của từng người để hiểu họ', profile: orientationProfile({ socialHuman: 5, communication: 4, international: 2 }) },
@@ -791,8 +809,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 8,
     weight: 1,
     text: 'Bạn thích học theo cách nào hơn?',
-    maxSelect: 1,
-    hint: 'Chọn 1 cách học phù hợp với bạn',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[8] ?? 3,
+    hint: 'Chọn tối đa 3 cách học phù hợp với bạn; nếu chỉ thấy 1 hoặc 2 phù hợp, bạn có thể chọn ít hơn.',
     options: [
       { id: 'q8_opt1', label: 'Tự đọc, tự tìm ví dụ và làm theo cách của mình', profile: orientationProfile({ research: 4, analysis: 4, creativity: 3 }) },
       { id: 'q8_opt2', label: 'Trao đổi với bạn bè rồi cùng phát triển ý tưởng', profile: orientationProfile({ communication: 5, socialHuman: 4, creativity: 3 }) },
@@ -803,8 +821,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 9,
     weight: 1,
     text: 'Hoạt động nào khiến bạn muốn tham gia lâu dài?',
-    maxSelect: 1,
-    hint: 'Chọn 1 hoạt động bạn thấy có ý nghĩa',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[9] ?? 3,
+    hint: 'Chọn tối đa 3 hoạt động bạn thấy có ý nghĩa; nếu cần, bạn có thể chọn ít hơn.',
     options: [
       { id: 'q9_opt1', label: 'Làm nội dung, chụp ảnh, quay video hoặc kể chuyện', profile: orientationProfile({ creativity: 5, communication: 4, technologyData: 3 }) },
       { id: 'q9_opt2', label: 'Tìm hiểu, lưu giữ hoặc giới thiệu văn hóa và lịch sử', profile: orientationProfile({ research: 5, language: 4, socialHuman: 3 }) },
@@ -817,8 +835,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 10,
     weight: 1,
     text: 'Bạn muốn tạo ra sản phẩm nào sau một dự án?',
-    maxSelect: 1,
-    hint: 'Chọn 1 kết quả khiến bạn thấy vui nhất',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[10] ?? 3,
+    hint: 'Chọn tối đa 3 kết quả khiến bạn thấy vui nhất; nếu chưa chắc chắn, chọn ít hơn.',
     options: [
       { id: 'q10_opt1', label: 'Một bài viết, video hoặc sản phẩm giúp nhiều người hiểu vấn đề hơn', profile: orientationProfile({ communication: 5, creativity: 5, socialHuman: 3 }) },
       { id: 'q10_opt2', label: 'Một bản tổng hợp thông tin rõ ràng, có dẫn chứng', profile: orientationProfile({ analysis: 5, research: 5, technologyData: 3 }) },
@@ -829,8 +847,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 11,
     weight: 1,
     text: 'Khi làm việc với người đến từ nơi khác, điều gì làm bạn hứng thú?',
-    maxSelect: 1,
-    hint: 'Chọn 1 điều bạn muốn khám phá',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[11] ?? 2,
+    hint: 'Chọn 1 hoặc 2 điều bạn muốn khám phá; nếu chưa hoàn toàn phù hợp, có thể chọn ít hơn.',
     options: [
       { id: 'q11_opt1', label: 'Học cách họ dùng ngôn ngữ và kể về văn hóa của họ', profile: orientationProfile({ language: 5, international: 5, communication: 3 }) },
       { id: 'q11_opt2', label: 'Tìm hiểu cách các bên trao đổi và cùng giải quyết một việc', profile: orientationProfile({ international: 5, communication: 4, organization: 3, analysis: 3 }) },
@@ -841,8 +859,8 @@ const LEGACY_ACTIVE_ORIENTATION_QUESTIONS: OrientationQuestion[] = [
     id: 12,
     weight: 1,
     text: 'Trong một công việc mới, bạn muốn được rèn luyện điều gì nhất?',
-    maxSelect: 1,
-    hint: 'Chọn 1 kỹ năng bạn muốn phát triển',
+    maxSelect: LEGACY_MAX_SELECTION_BY_QUESTION[12] ?? 2,
+    hint: 'Chọn 1 hoặc 2 kỹ năng bạn muốn phát triển; nếu chưa chắc chắn, có thể chọn ít hơn.',
     options: [
       { id: 'q12_opt1', label: 'Viết, nói và trình bày ý tưởng thuyết phục hơn', profile: orientationProfile({ communication: 5, language: 4, creativity: 3 }) },
       { id: 'q12_opt2', label: 'Đọc hiểu, phân tích và tìm ra cách giải quyết vấn đề', profile: orientationProfile({ analysis: 5, research: 4, technologyData: 3 }) },
@@ -1138,11 +1156,9 @@ const ORIENTATION_QUESTION_BANK_WITH_DISTINCT_LABELS = ORIENTATION_QUESTION_BANK
   })),
 }));
 
-// Group related competency signals while keeping the competency labels hidden in the UI.
-const ORIENTATION_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
-export const ORIENTATION_QUESTIONS: OrientationQuestion[] = ORIENTATION_DISPLAY_ORDER
-  .map((id) => ORIENTATION_QUESTION_BANK_WITH_DISTINCT_LABELS.find((question) => question.id === id))
-  .filter((question) => Boolean(question)) as OrientationQuestion[];
+// Keep the original 15-question survey that the system was using before the later expansion.
+// This preserves the prior survey flow and avoids changing the historical scoring baseline.
+export const ORIENTATION_QUESTIONS: OrientationQuestion[] = LEGACY_ORIENTATION_QUESTIONS;
 
 /**
  * ============================================================================
@@ -1840,13 +1856,11 @@ export function calculateMajorFit(
     const uScore = userProfile[key] ?? 50;
     const mScore = majorProfile.profile[key] ?? 50;
     const difference = Math.abs(uScore - mScore);
-    // Previous linear calibration compressed the distribution too aggressively:
-    // most majors ended up with very similar scores because a modest gap still
-    // produced a high similarity value. A non-linear fit curve keeps high-match
-    // criteria strong, while mismatches are penalized more sharply so the ranking
-    // remains distinguishable across the full 42-major set.
-    const rawGapRatio = difference / 100;
-    const similarity = Math.max(0, 100 * (1 - Math.pow(rawGapRatio, 1.65)));
+    // Use a stronger non-linear decay so similar majors stay near the top,
+    // while mismatched majors drop more noticeably. This prevents the ranking from
+    // collapsing into a near-uniform 80–90% score across many majors.
+    const rawSimilarity = Math.max(0, 100 - difference);
+    const similarity = Math.pow(rawSimilarity / 100, 1.8) * 100;
     const normalizedWeight = (majorProfile.weights[key] || 0) / totalWeight;
     const weightedContribution = similarity * normalizedWeight;
 

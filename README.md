@@ -6,13 +6,13 @@ Website hỗ trợ thí sinh tìm hiểu thông tin tuyển sinh, tra cứu đi�
 
 ---
 
-## 🌐 Demo
+## Demo
 
 **Website:** https://hcmussh.vercel.app
 
 ---
 
-## Giới thiệu
+## 1. Giới thiệu
 
 Hệ thống được xây dựng nhằm hỗ trợ thí sinh trong quá trình tìm hiểu và lựa chọn ngành học tại:
 
@@ -32,14 +32,80 @@ Nhập điểm / dự đoán
 Xem mục tiêu điểm
         ↓
 Tham khảo phân bố điểm
-
-Dữ liệu tuyển sinh năm 2026 được sử dụng làm dữ liệu tham chiếu khi phù hợp.
-
-Điểm tham chiếu 2026 không được xem là điểm chuẩn chính thức của năm 2027.
+```
 
 ---
 
-## Công thức điểm
+## 2. Các chức năng chính
+
+### 2.1. Tra cứu điểm chuẩn
+
+Cho phép thí sinh tra cứu dữ liệu tuyển sinh theo các tiêu chí như:
+
+* Năm tuyển sinh
+* Ngành
+* Hệ đào tạo
+* Phương thức xét tuyển
+* Tổ hợp
+* Mức điểm
+
+Kết quả được hiển thị dưới dạng bảng để người dùng dễ dàng so sánh các ngành và chương trình đào tạo.
+
+### 2.2. Định hướng ngành
+
+Chức năng định hướng ngành hỗ trợ người dùng khám phá mức độ phù hợp giữa sở thích, khả năng và đặc điểm cá nhân với các ngành đào tạo trong hệ thống.
+
+Kết quả được sử dụng nhằm cung cấp thông tin tham khảo trong quá trình lựa chọn ngành học.
+
+### 2.3. Dự đoán trúng tuyển
+
+Người dùng có thể nhập các thông tin điểm số để hệ thống tính toán điểm xét tuyển dự kiến và tham khảo khả năng trúng tuyển dựa trên dữ liệu tuyển sinh được sử dụng trong hệ thống.
+
+Kết quả dự đoán không phải là kết quả tuyển sinh chính thức.
+
+### 2.4. Mục tiêu điểm
+
+Chức năng Mục tiêu điểm giúp người dùng trả lời câu hỏi:
+
+> Nếu muốn hướng tới ngành đã chọn, tôi cần đạt khoảng bao nhiêu điểm và hiện tại còn thiếu bao nhiêu điểm?
+
+Chức năng sử dụng điểm chuẩn tham chiếu thực tế để xây dựng mục tiêu.
+
+### 2.5. Phân bố điểm
+
+Trang Phân bố điểm cung cấp thông tin trực quan về điểm của người dùng tham gia hệ thống.
+
+Dữ liệu được xây dựng từ các điểm thực tế được người dùng cung cấp theo cơ chế của hệ thống.
+
+---
+
+## 3. Quy trình sử dụng hệ thống
+
+Quy trình sử dụng website được thiết kế theo hướng:
+
+```text
+Tra cứu thông tin tuyển sinh
+            ↓
+Tra cứu điểm chuẩn
+            ↓
+Tìm hiểu ngành học
+            ↓
+Định hướng ngành
+            ↓
+Nhập điểm cá nhân
+            ↓
+Dự đoán trúng tuyển
+            ↓
+Xem mục tiêu điểm
+            ↓
+Tham khảo phân bố điểm
+```
+
+Người dùng có thể lựa chọn từng chức năng tùy theo nhu cầu mà không bắt buộc phải thực hiện toàn bộ quy trình.
+
+---
+
+## 4. Công thức điểm
 
 Tùy phương thức xét tuyển, hệ thống sử dụng các thành phần điểm tương ứng và công thức đã được triển khai trong project.
 
@@ -53,19 +119,21 @@ Các thành phần có thể bao gồm:
 
 Các giá trị được chuẩn hóa theo thang điểm tương ứng trước khi tính toán.
 
-Hệ thống không tạo điểm chuẩn 2027 giả để thay thế dữ liệu chính thức.
+Hệ thống sử dụng công thức và trọng số theo logic đã được triển khai trong project, không tự ý tạo công thức tuyển sinh mới.
+
+Hệ thống không tạo điểm chuẩn năm 2027 giả để thay thế dữ liệu chính thức.
 
 ---
 
-# 5. Mục tiêu điểm
+## 5. Mục tiêu điểm
 
-Mục tiêu điểm giúp người dùng trả lời:
+Mục tiêu điểm giúp người dùng xác định mức điểm cần hướng tới dựa trên điểm chuẩn tham chiếu của ngành đã chọn.
 
-> Nếu muốn hướng tới ngành đã chọn, tôi cần đạt khoảng bao nhiêu điểm và hiện tại còn thiếu bao nhiêu điểm?
+Dữ liệu tham chiếu được ưu tiên lấy từ dữ liệu tuyển sinh năm 2026 đang có trong hệ thống.
 
-Chức năng sử dụng điểm chuẩn tham chiếu thực tế để xây dựng mục tiêu.
+### Các lựa chọn mục tiêu
 
-Người dùng có thể chọn:
+Người dùng có thể lựa chọn:
 
 * Theo điểm chuẩn tham chiếu
 * Cao hơn 0.5 điểm
@@ -86,25 +154,28 @@ Mục tiêu: 27.50
 Còn thiếu: 1.70 điểm
 ```
 
-Nếu điểm dự kiến đã đạt mục tiêu, hệ thống thông báo:
+Nếu điểm dự kiến đã đạt mục tiêu:
 
 ```text
 Bạn đã đạt mức mục tiêu.
 ```
 
-Chức năng này chỉ mang tính tham khảo và không đảm bảo khả năng trúng tuyển.
+Điểm chuẩn năm 2026 được sử dụng với vai trò **dữ liệu tham chiếu** cho việc xây dựng mục tiêu năm 2027.
+
+> **Lưu ý:** Điểm chuẩn tham chiếu 2026 không phải là điểm chuẩn chính thức của năm 2027. Chức năng Mục tiêu điểm chỉ mang tính tham khảo và không đảm bảo khả năng trúng tuyển.
 
 ---
 
-# 6. Phân bố điểm
+## 6. Phân bố điểm
 
-Trang Phân bố điểm cung cấp thông tin trực quan về điểm của người dùng tham gia hệ thống.
+Trang Phân bố điểm cung cấp thông tin trực quan về điểm thực tế của người dùng tham gia hệ thống.
 
-Dữ liệu được xây dựng từ các điểm thực tế được người dùng cung cấp theo cơ chế của hệ thống.
+Dữ liệu phân bố được xử lý theo thiết bị:
 
-Mỗi thiết bị chỉ đóng góp một điểm thực tế mới nhất vào phân bố.
-
-Các điểm giả định không được đưa vào dữ liệu phân bố điểm thực tế.
+* Mỗi thiết bị chỉ đóng góp một điểm thực tế mới nhất.
+* Nếu người dùng thực hiện nhiều lần dự đoán bằng điểm giả định thì các điểm này không được đưa vào phân bố điểm thực tế.
+* Điểm giả định không được sử dụng để làm đầy biểu đồ.
+* Dữ liệu phân bố được xây dựng từ các điểm thực tế đã được cung cấp theo cơ chế của hệ thống.
 
 Khi chưa đủ dữ liệu:
 
@@ -116,11 +187,11 @@ Hệ thống không sử dụng dữ liệu giả để làm đầy biểu đồ
 
 ---
 
-# 7. Quản trị hệ thống
+## 7. Quản trị hệ thống
 
-Hệ thống có khu vực quản trị dành cho các tài khoản quản trị được phân quyền.
+Hệ thống có khu vực quản trị dành cho các tài khoản được phân quyền.
 
-Các vai trò gồm:
+Các vai trò quản trị gồm:
 
 ```text
 SUPERADMIN
@@ -128,7 +199,7 @@ ADMIN
 EDITOR
 ```
 
-Tùy vai trò, người dùng có thể được phép thực hiện các thao tác quản trị khác nhau.
+Tùy theo vai trò, người dùng có thể được phép thực hiện các thao tác quản trị khác nhau.
 
 Các chức năng quản trị có thể bao gồm:
 
@@ -142,7 +213,7 @@ Quyền truy cập được kiểm soát thông qua Firebase Authentication và 
 
 ---
 
-# 8. Nhật ký hoạt động
+## 8. Nhật ký hoạt động
 
 Hệ thống ghi nhận các hoạt động quản trị quan trọng để hỗ trợ theo dõi thao tác.
 
@@ -158,9 +229,9 @@ Thông tin người thực hiện được đồng bộ với thông tin thành 
 
 ---
 
-# 9. Công nghệ sử dụng
+## 9. Công nghệ sử dụng
 
-## Frontend
+### Frontend
 
 * React
 * TypeScript
@@ -169,17 +240,17 @@ Thông tin người thực hiện được đồng bộ với thông tin thành 
 * Lucide React
 * Recharts
 
-## Backend / Database
+### Backend / Database
 
 * Firebase Authentication
 * Cloud Firestore
 * Firebase Admin SDK cho các API server-side cần thiết
 
-## AI / dữ liệu
+### AI / Dữ liệu
 
 Tùy chức năng được triển khai trong project, hệ thống có thể sử dụng các công cụ xử lý dữ liệu và mô hình để hỗ trợ phân tích.
 
-## Deployment
+### Deployment
 
 Website được triển khai trên:
 
@@ -187,7 +258,7 @@ Website được triển khai trên:
 
 ---
 
-# 10. Dữ liệu
+## 10. Dữ liệu
 
 Dữ liệu tuyển sinh được lưu trữ và truy xuất thông qua Cloud Firestore.
 
@@ -207,9 +278,11 @@ Hệ thống chỉ sử dụng dữ liệu có trong nguồn dữ liệu đượ
 
 Không tự tạo điểm chuẩn chính thức cho các năm chưa có dữ liệu.
 
+Đối với chức năng dự đoán năm 2027, dữ liệu năm 2026 có thể được sử dụng làm dữ liệu lịch sử tham chiếu khi phù hợp.
+
 ---
 
-# 11. Bảo mật
+## 11. Bảo mật
 
 Các thông tin nhạy cảm không được đưa vào source code công khai.
 
@@ -231,31 +304,33 @@ RESEND_API_KEY=
 
 > **Không commit các secret như Firebase Private Key, Resend API Key hoặc mật khẩu tài khoản vào repository.**
 
+Các thông tin xác thực và quyền truy cập quản trị phải được bảo vệ và không công khai trong tài liệu hoặc source code.
+
 ---
 
-# 12. Chạy project trên máy local
+## 12. Chạy project trên máy local
 
-## Yêu cầu
+### Yêu cầu
 
 Cần cài đặt:
 
 * Node.js
 * npm
 
-Kiểm tra:
+Kiểm tra phiên bản:
 
 ```bash
 node -v
 npm -v
 ```
 
-## Cài đặt dependency
+### Cài đặt dependency
 
 ```bash
 npm install
 ```
 
-## Cấu hình môi trường
+### Cấu hình môi trường
 
 Tạo file:
 
@@ -267,7 +342,7 @@ và khai báo các biến môi trường cần thiết cho project.
 
 Không đưa giá trị secret lên GitHub.
 
-## Chạy development
+### Chạy development
 
 ```bash
 npm run dev
@@ -281,7 +356,7 @@ http://localhost:3000
 
 ---
 
-# 13. Build project
+## 13. Build project
 
 Để kiểm tra project có thể build production:
 
@@ -289,7 +364,7 @@ http://localhost:3000
 npm run build
 ```
 
-## Kiểm tra TypeScript
+### Kiểm tra TypeScript
 
 ```bash
 npm run lint
@@ -299,7 +374,7 @@ Project sử dụng TypeScript để kiểm tra lỗi mã nguồn.
 
 ---
 
-# 14. Cấu trúc project
+## 14. Cấu trúc project
 
 Cấu trúc thực tế có thể thay đổi theo phiên bản hiện tại của project.
 
@@ -321,7 +396,7 @@ Không nên thay đổi kiến trúc hoặc xóa file chỉ dựa trên tên fil
 
 ---
 
-# 15. Các trang chính
+## 15. Các trang chính
 
 Website hiện gồm các khu vực chính:
 
@@ -334,11 +409,11 @@ Website hiện gồm các khu vực chính:
 | `/distribution` | Phân bố điểm         |
 | `/guide`        | Cẩm nang / hướng dẫn |
 
-> Route thực tế có thể thay đổi theo phiên bản triển khai hiện tại của project.
+Route thực tế có thể thay đổi theo phiên bản triển khai hiện tại của project.
 
 ---
 
-# 16. Responsive
+## 16. Responsive
 
 Website được thiết kế để sử dụng trên nhiều kích thước màn hình:
 
@@ -370,7 +445,7 @@ Mục tiêu là đảm bảo:
 
 ---
 
-# 17. Giao diện
+## 17. Giao diện
 
 Giao diện sử dụng hệ màu nhận diện USSH theo hướng:
 
@@ -394,7 +469,7 @@ Giao diện ưu tiên nền sáng và sử dụng màu thương hiệu làm đi�
 
 ---
 
-# 18. Lưu ý về kết quả
+## 18. Lưu ý về kết quả
 
 Các chức năng:
 
@@ -413,13 +488,16 @@ Xác suất tuyển sinh chính thức
 Cam kết trúng tuyển
 ```
 
+Đặc biệt, điểm chuẩn tham chiếu năm 2026 được sử dụng để hỗ trợ các chức năng dự đoán và mục tiêu điểm năm 2027 khi phù hợp.
+
 Điểm chuẩn và thông tin tuyển sinh chính thức cần được đối chiếu với thông báo của Trường Đại học Khoa học Xã hội và Nhân văn, ĐHQG-HCM.
 
 ---
 
-# 19. Thông tin đơn vị
+## 19. Thông tin đơn vị
 
 **Trường Đại học Khoa học Xã hội và Nhân văn**
+
 **Đại học Quốc gia Thành phố Hồ Chí Minh**
 
 ### Cơ sở Sài Gòn
@@ -430,9 +508,11 @@ Cam kết trúng tuyển
 
 Khu đô thị ĐHQG-HCM, P. Linh Xuân, TP. HCM
 
-# 20. Mục đích xây dựng
+---
 
-Website được xây dựng tập trung vào việc ứng dụng kiến thức về:
+## 20. Mục đích xây dựng
+
+Website được xây dựng tập trung vào việc ứng dụng các kiến thức về:
 
 * Phân tích dữ liệu
 * Phát triển ứng dụng web
@@ -449,6 +529,3 @@ Sản phẩm hướng tới việc xây dựng một công cụ hỗ trợ thí 
 ## Bản quyền
 
 © 2026 Bản quyền thuộc về Trường Đại học Khoa học Xã hội và Nhân văn, Đại học Quốc gia Thành phố Hồ Chí Minh
-
-```
-```
